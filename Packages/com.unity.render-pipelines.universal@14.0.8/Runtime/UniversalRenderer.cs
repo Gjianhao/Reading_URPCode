@@ -20,7 +20,7 @@ namespace UnityEngine.Rendering.Universal
     };
 
     /// <summary>
-    /// When the Universal Renderer should use Depth Priming in Forward mode.
+    /// 就是Z-PrePass。When the Universal Renderer should use Depth Priming in Forward mode.
     /// </summary>
     public enum DepthPrimingMode
     {
