@@ -723,10 +723,10 @@ namespace UnityEngine.Rendering.Universal
             if (m_RendererDataList == null)
                 m_RendererDataList = new ScriptableRendererData[1];
 
-            // If no default data we can't create pipeline instance
+            // If no default data we can't create pipeline instance.如果没有默认数据，我们就不能创建管线实例
             if (m_RendererDataList[m_DefaultRendererIndex] == null)
             {
-                // If previous version and current version are miss-matched then we are waiting for the upgrader to kick in
+                // If previous version and current version are miss-matched then we are waiting for the upgrader to kick in 如果以前的版本和当前版本不匹配，那么我们正在等待升级程序启动
                 if (k_AssetPreviousVersion != k_AssetVersion)
                     return null;
 
@@ -745,7 +745,8 @@ namespace UnityEngine.Rendering.Universal
             CreateRenderers();
 
             // Blitter can only be initialized after renderers have been created and ResourceReloader has been
-            // called on potentially empty shader resources
+            // called on potentially empty shader resources 。
+            // Blitter只能在渲染器创建后初始化，并且在潜在的空着色器资源上调用ResourceReloader
             foreach (var data in m_RendererDataList)
             {
                 if (data is UniversalRendererData universalData)
@@ -807,7 +808,7 @@ namespace UnityEngine.Rendering.Universal
                 for (int i = 0; i < m_Renderers.Length; ++i)
                 {
                     if (m_Renderers[i] != null)
-                        Debug.LogError($"Creating renderers but previous instance wasn't properly destroyed: m_Renderers[{i}]");
+                        Debug.LogError($"Creating renderers but previous instance wasn't properly destroyed: m_Renderers[{i}]");// 之前的没有被正确销毁
                 }
             }
 

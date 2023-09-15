@@ -1717,14 +1717,15 @@ namespace UnityEngine.Rendering.Universal
         FinalBlit
     }
 
-    // Internal class to detect and cache runtime platform information.
-    // TODO: refine the logic to provide platform abstraction. Eg, we should devide platforms based on capabilities and perf budget.
+    // Internal class to detect and cache runtime platform information.检测和缓存运行时平台信息的内部类。
+    // TODO: refine the logic to provide platform abstraction. Eg, we should devide platforms based on capabilities and perf budget. 细化逻辑以提供平台抽象。例如，我们应该根据能力和性能预算来划分平台。
     // TODO: isXRMobile is a bad catagory. Alignment and refactor needed.
     // TODO: Compress all the query data into "isXRMobile" style bools and enums.
     internal static class PlatformAutoDetect
     {
         /// <summary>
         /// Detect and cache runtime platform information. This function should only be called once when creating the URP.
+        /// 检测并缓存运行时平台信息。这个方法会在创建URP时调用一次。
         /// </summary>
         internal static void Initialize()
         {
