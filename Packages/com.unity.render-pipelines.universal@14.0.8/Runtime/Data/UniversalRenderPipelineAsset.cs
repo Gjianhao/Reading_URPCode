@@ -779,6 +779,7 @@ namespace UnityEngine.Rendering.Universal
 
         /// <summary>
         /// Unity calls this function when it loads the asset or when the asset is changed with the Inspector.
+        /// Unity在加载资源或使用检查器更改资源时调用此函数。
         /// </summary>
         protected override void OnValidate()
         {

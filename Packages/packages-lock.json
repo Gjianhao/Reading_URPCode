@@ -197,6 +197,12 @@
       },
       "url": "https://packages.unity.cn"
     },
+    "demonixis.rendererfeatures.ssgi-urp": {
+      "version": "file:demonixis.rendererfeatures.ssgi-urp@31421d1f33",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "com.unity.modules.ai": {
       "version": "1.0.0",
       "depth": 0,

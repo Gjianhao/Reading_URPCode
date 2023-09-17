@@ -325,7 +325,7 @@ namespace UnityEngine.Rendering.Universal
 #if UNITY_2021_1_OR_NEWER
             using (new ProfilingScope(null, Profiling.Pipeline.beginContextRendering))
             {
-                BeginContextRendering(renderContext, cameras);
+                BeginContextRendering(renderContext, cameras); // 1、开始渲染：打个标记
             }
 #else
             using (new ProfilingScope(null, Profiling.Pipeline.beginFrameRendering))
@@ -334,7 +334,7 @@ namespace UnityEngine.Rendering.Universal
             }
 #endif
 
-            GraphicsSettings.lightsUseLinearIntensity = (QualitySettings.activeColorSpace == ColorSpace.Linear);
+            GraphicsSettings.lightsUseLinearIntensity = (QualitySettings.activeColorSpace == ColorSpace.Linear); // 光照的一些设置
             GraphicsSettings.lightsUseColorTemperature = true;
             GraphicsSettings.defaultRenderingLayerMask = k_DefaultRenderingLayerMask;
             SetupPerFrameShaderConstants();
@@ -355,9 +355,9 @@ namespace UnityEngine.Rendering.Universal
                 UniversalRenderPipelineDebugDisplaySettings.Instance.UpdateFrameTiming();
 #endif
 
-            SortCameras(cameras);
+            SortCameras(cameras); // 2、根据深度排序相机
 #if UNITY_2021_1_OR_NEWER
-            for (int i = 0; i < cameras.Count; ++i)
+            for (int i = 0; i < cameras.Count; ++i) // 3、遍历相机
 #else
             for (int i = 0; i < cameras.Length; ++i)
 #endif
