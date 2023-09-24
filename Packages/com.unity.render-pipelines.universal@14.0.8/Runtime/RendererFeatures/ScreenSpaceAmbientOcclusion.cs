@@ -134,14 +134,13 @@ namespace UnityEngine.Rendering.Universal {
         // The SSAO Pass
         private class ScreenSpaceAmbientOcclusionPass : ScriptableRenderPass {
             // Properties 是否是延迟渲染
-            private bool isRendererDeferred => m_Renderer != null && m_Renderer is UniversalRenderer &&
-                                               ((UniversalRenderer)m_Renderer).renderingModeRequested == RenderingMode.Deferred;
+            private bool isRendererDeferred => m_Renderer != null && m_Renderer is UniversalRenderer && ((UniversalRenderer)m_Renderer).renderingModeRequested == RenderingMode.Deferred;
 
             // Internal Variables
             internal string profilerTag;
 
             // Private Variables
-            private bool m_SupportsR8RenderTextureFormat = SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.R8); 
+            private bool m_SupportsR8RenderTextureFormat = SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.R8); // 是否支持单通道8位的RT
             private int m_BlueNoiseTextureIndex = 0;
             private float m_BlurRandomOffsetX = 0f;
             private float m_BlurRandomOffsetY = 0f;
@@ -154,7 +153,7 @@ namespace UnityEngine.Rendering.Universal {
             private RTHandle[] m_SSAOTextures = new RTHandle[4];
             private BlurTypes m_BlurType = BlurTypes.Bilateral;
             private Matrix4x4[] m_CameraViewProjections = new Matrix4x4[2];
-            private ProfilingSampler m_ProfilingSampler = ProfilingSampler.Get(URPProfileId.SSAO);
+            private ProfilingSampler m_ProfilingSampler = ProfilingSampler.Get(URPProfileId.SSAO); // 获取相应枚举值的采样器
             private ScriptableRenderer m_Renderer = null;
             private RenderTextureDescriptor m_AOPassDescriptor;
             private ScreenSpaceAmbientOcclusionSettings m_CurrentSettings;
@@ -220,8 +219,7 @@ namespace UnityEngine.Rendering.Universal {
                 m_CurrentSettings = new ScreenSpaceAmbientOcclusionSettings();
             }
 
-            internal bool Setup(ref ScreenSpaceAmbientOcclusionSettings featureSettings, ref ScriptableRenderer renderer, ref Material material,
-                ref Texture2D[] blueNoiseTextures) {
+            internal bool Setup(ref ScreenSpaceAmbientOcclusionSettings featureSettings, ref ScriptableRenderer renderer, ref Material material, ref Texture2D[] blueNoiseTextures) {
                 m_BlueNoiseTextures = blueNoiseTextures;
                 m_Material = material;
                 m_Renderer = renderer;
@@ -229,7 +227,7 @@ namespace UnityEngine.Rendering.Universal {
 
                 // RenderPass Event + Source Settings (Depth / Depth&Normals
                 if (isRendererDeferred) {
-                    renderPassEvent = m_CurrentSettings.AfterOpaque ? RenderPassEvent.AfterRenderingOpaques : RenderPassEvent.AfterRenderingGbuffer;
+                    renderPassEvent = m_CurrentSettings.AfterOpaque ? RenderPassEvent.AfterRenderingOpaques : RenderPassEvent.AfterRenderingGbuffer; // 是否是不透明物体之前渲染
                     m_CurrentSettings.Source = ScreenSpaceAmbientOcclusionSettings.DepthSource.DepthNormals;
                 }
                 else {

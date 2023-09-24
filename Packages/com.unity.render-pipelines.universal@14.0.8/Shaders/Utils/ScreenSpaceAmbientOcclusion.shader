@@ -38,7 +38,7 @@ Shader "Hidden/Universal Render Pipeline/ScreenSpaceAmbientOcclusion" {
         }
 
         // ------------------------------------------------------------------
-        // Bilateral Blur
+        // Bilateral Blur 双边模糊
         // ------------------------------------------------------------------
 
         // 1 - Horizontal
@@ -99,7 +99,7 @@ Shader "Hidden/Universal Render Pipeline/ScreenSpaceAmbientOcclusion" {
         }
 
         // ------------------------------------------------------------------
-        // Gaussian Blur
+        // Gaussian Blur 高斯模糊
         // ------------------------------------------------------------------
 
         // 5 - Horizontal
