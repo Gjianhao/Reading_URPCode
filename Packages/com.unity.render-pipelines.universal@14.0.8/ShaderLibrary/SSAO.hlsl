@@ -356,12 +356,12 @@ half4 SSAO(Varyings input) : SV_Target
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
     float2 uv = input.texcoord;
     // Early Out for Sky...
-    float rawDepth_o = SampleDepth(uv);
-    if (rawDepth_o < SKY_DEPTH_VALUE)
-        return PackAONormal(HALF_ZERO, HALF_ZERO);
+    float rawDepth_o = SampleDepth(uv); // 采样深度值
+    if (rawDepth_o < SKY_DEPTH_VALUE) 
+        return PackAONormal(HALF_ZERO, HALF_ZERO); // 深度趋于0的时候，解包AO的法线为0
 
     // Early Out for Falloff
-    float linearDepth_o = GetLinearEyeDepth(rawDepth_o);
+    float linearDepth_o = GetLinearEyeDepth(rawDepth_o); // 转换为线性深度值
     half halfLinearDepth_o = half(linearDepth_o);
     if (halfLinearDepth_o > FALLOFF)
         return PackAONormal(HALF_ZERO, HALF_ZERO);
