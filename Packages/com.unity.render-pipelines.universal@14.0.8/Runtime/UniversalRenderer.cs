@@ -77,6 +77,7 @@ namespace UnityEngine.Rendering.Universal
         internal RenderingMode renderingModeRequested => m_RenderingMode;
 
         // Actual rendering mode, which may be different (ex: wireframe rendering, hardware not capable of deferred rendering).
+        // 实际渲染模式可能不同（例如：线框渲染，硬件无法进行延迟渲染）。
         internal RenderingMode renderingModeActual => renderingModeRequested == RenderingMode.Deferred && (GL.wireframe || (DebugHandler != null && DebugHandler.IsActiveModeUnsupportedForDeferred) || m_DeferredLights == null || !m_DeferredLights.IsRuntimeSupportedThisFrame() || m_DeferredLights.IsOverlay)
         ? RenderingMode.Forward
         : this.renderingModeRequested;
@@ -551,7 +552,7 @@ namespace UnityEngine.Rendering.Universal
             var createColorTexture = ((rendererFeatures.Count != 0 && m_IntermediateTextureMode == IntermediateTextureMode.Always) && !isPreviewCamera) ||
                 (Application.isEditor && m_Clustering);
 
-            // Gather render passe input requirements
+            // Gather render passe input requirements 收集渲染输入要求
             RenderPassInputSummary renderPassInputs = GetRenderPassInputs(ref renderingData);
 
             // Gather render pass require rendering layers event and mask size
@@ -605,6 +606,7 @@ namespace UnityEngine.Rendering.Universal
             bool anyPostProcessing = renderingData.postProcessingEnabled && m_PostProcessPasses.isCreated;
 
             // If Camera's PostProcessing is enabled and if there any enabled PostProcessing requires depth texture as shader read resource (Motion Blur/DoF)
+            // 如果启用了相机的后期处理，并且如果启用了后期处理，则需要深度纹理作为着色器读取资源（运动模糊/DoF）。
             bool cameraHasPostProcessingWithDepth = applyPostProcessing && cameraData.postProcessingRequiresDepthTexture;
 
             // TODO: We could cache and generate the LUT before rendering the stack
@@ -648,10 +650,10 @@ namespace UnityEngine.Rendering.Universal
 
             requiresDepthPrepass |= useDepthPriming;
 
-            // If possible try to merge the opaque and skybox passes instead of splitting them when "Depth Texture" is required.
-            // The copying of depth should normally happen after rendering opaques.
-            // But if we only require it for post processing or the scene camera then we do it after rendering transparent objects
-            // Aim to have the most optimized render pass event for Depth Copy (The aim is to minimize the number of render passes)
+            // If possible try to merge the opaque and skybox passes instead of splitting them when "Depth Texture" is required. 如果可能，在需要使用 "深度纹理 "时，请尝试合并不透明和天空盒通道，而不是将它们分开。
+            // The copying of depth should normally happen after rendering opaques. 复制深度通常应在渲染不透明后进行。
+            // But if we only require it for post processing or the scene camera then we do it after rendering transparent objects 但是，如果我们只需要在后期处理或场景摄像机中使用，那么我们就可以在渲染透明对象后使用它
+            // Aim to have the most optimized render pass event for Depth Copy (The aim is to minimize the number of render passes) 目标是为深度复制提供最优化的渲染传递事件（目的是尽量减少渲染传递的次数）
             if (requiresDepthTexture)
             {
                 bool copyDepthAfterTransparents = m_CopyDepthMode == CopyDepthMode.AfterTransparents;
@@ -1351,34 +1353,35 @@ namespace UnityEngine.Rendering.Universal
 
         private struct RenderPassInputSummary
         {
-            internal bool requiresDepthTexture;
-            internal bool requiresDepthPrepass;
-            internal bool requiresNormalsTexture;
-            internal bool requiresColorTexture;
-            internal bool requiresColorTextureCreated;
-            internal bool requiresMotionVectors;
-            internal RenderPassEvent requiresDepthNormalAtEvent;
-            internal RenderPassEvent requiresDepthTextureEarliestEvent;
+            internal bool requiresDepthTexture; // 需要深度纹理
+            internal bool requiresDepthPrepass; // 需要提前深度
+            internal bool requiresNormalsTexture; // 需要法线纹理
+            internal bool requiresColorTexture; // 需要颜色纹理
+            internal bool requiresColorTextureCreated; // 需要颜色纹理生成
+            internal bool requiresMotionVectors; // 需要运动向量
+            internal RenderPassEvent requiresDepthNormalAtEvent; // 需要深度和法线事件
+            internal RenderPassEvent requiresDepthTextureEarliestEvent; // 需要深度纹理最早事件
         }
 
         private RenderPassInputSummary GetRenderPassInputs(ref RenderingData renderingData)
         {
+            // 如果是延迟渲染，渲染事件就是：GBuffer之前渲染，否则就是不透明物体之前渲染
             RenderPassEvent beforeMainRenderingEvent = m_RenderingMode == RenderingMode.Deferred ? RenderPassEvent.BeforeRenderingGbuffer : RenderPassEvent.BeforeRenderingOpaques;
 
             RenderPassInputSummary inputSummary = new RenderPassInputSummary();
-            inputSummary.requiresDepthNormalAtEvent = RenderPassEvent.BeforeRenderingOpaques;
-            inputSummary.requiresDepthTextureEarliestEvent = RenderPassEvent.BeforeRenderingPostProcessing;
+            inputSummary.requiresDepthNormalAtEvent = RenderPassEvent.BeforeRenderingOpaques; // 需要深度和法线的事件，在不透明物体之前
+            inputSummary.requiresDepthTextureEarliestEvent = RenderPassEvent.BeforeRenderingPostProcessing; // 后处理之前
             for (int i = 0; i < activeRenderPassQueue.Count; ++i)
             {
-                ScriptableRenderPass pass = activeRenderPassQueue[i];
+                ScriptableRenderPass pass = activeRenderPassQueue[i]; // 返回渲染器中渲染Pass列表
                 bool needsDepth = (pass.input & ScriptableRenderPassInput.Depth) != ScriptableRenderPassInput.None;
                 bool needsNormals = (pass.input & ScriptableRenderPassInput.Normal) != ScriptableRenderPassInput.None;
                 bool needsColor = (pass.input & ScriptableRenderPassInput.Color) != ScriptableRenderPassInput.None;
                 bool needsMotion = (pass.input & ScriptableRenderPassInput.Motion) != ScriptableRenderPassInput.None;
                 bool eventBeforeMainRendering = pass.renderPassEvent <= beforeMainRenderingEvent;
 
-                // TODO: Need a better way to handle this, probably worth to recheck after render graph
-                // DBuffer requires color texture created as it does not handle y flip correctly
+                // TODO: Need a better way to handle this, probably worth to recheck after render graph 需要一个更好的方法来处理这个问题，也许值得在渲染图形后重新检查
+                // DBuffer requires color texture created as it does not handle y flip correctly DBuffer 需要创建彩色纹理，因为它无法正确处理 y 翻转
                 if (pass is DBufferRenderPass dBufferRenderPass)
                 {
                     inputSummary.requiresColorTextureCreated = true;
@@ -1520,14 +1523,15 @@ namespace UnityEngine.Rendering.Universal
 
         bool CanCopyDepth(ref CameraData cameraData)
         {
-            bool msaaEnabledForCamera = cameraData.cameraTargetDescriptor.msaaSamples > 1;
-            bool supportsTextureCopy = SystemInfo.copyTextureSupport != CopyTextureSupport.None;
-            bool supportsDepthTarget = RenderingUtils.SupportsRenderTextureFormat(RenderTextureFormat.Depth);
-            bool supportsDepthCopy = !msaaEnabledForCamera && (supportsDepthTarget || supportsTextureCopy);
+            bool msaaEnabledForCamera = cameraData.cameraTargetDescriptor.msaaSamples > 1; // 是否开启了2倍以上的采样抗锯齿
+            bool supportsTextureCopy = SystemInfo.copyTextureSupport != CopyTextureSupport.None; // 支持拷贝纹理
+            bool supportsDepthTarget = RenderingUtils.SupportsRenderTextureFormat(RenderTextureFormat.Depth); // 是否支持深度纹理
+            bool supportsDepthCopy = !msaaEnabledForCamera && (supportsDepthTarget || supportsTextureCopy); // 如果开启了MSAA，就不支持深度的拷贝
 
-            bool msaaDepthResolve = msaaEnabledForCamera && SystemInfo.supportsMultisampledTextures != 0;
+            bool msaaDepthResolve = msaaEnabledForCamera && SystemInfo.supportsMultisampledTextures != 0; // 如果开启了msaa，并且支持多重采样纹理
 
             // copying MSAA depth on GLES3 is giving invalid results. This won't be fixed by the driver team because it would introduce performance issues (more info in the Fogbugz issue 1339401 comments)
+            // 在 GLES3 上复制 MSAA 深度的结果无效。驱动程序团队不会修复这个问题，因为这会带来性能问题（更多信息请参见 Fogbugz 问题 1339401 评论）。
             if (IsGLESDevice() && msaaDepthResolve)
                 return false;
 

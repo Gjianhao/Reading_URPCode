@@ -385,6 +385,7 @@ namespace UnityEngine.Rendering.Universal
 
         /// <summary>
         /// Returns true if post processing passes require depth texture.
+        /// 如果后期处理过程需要深度纹理，则返回 true。
         /// </summary>
         public bool postProcessingRequiresDepthTexture;
 

@@ -6,7 +6,7 @@ namespace UnityEngine.Rendering.Universal.Internal
 {
     /// <summary>
     /// Render all objects that have a 'DepthOnly' pass into the given depth buffer.
-    ///
+    /// 渲染所有具有` DepthOnly `属性的对象到给定的深度缓冲区。
     /// You can use this pass to prime a depth buffer for subsequent rendering.
     /// Use it as a z-prepass, or use it to generate a depth buffer.
     /// </summary>
@@ -62,10 +62,12 @@ namespace UnityEngine.Rendering.Universal.Internal
             var desc = renderingData.cameraData.cameraTargetDescriptor;
 
             // When depth priming is in use the camera target should not be overridden so the Camera's MSAA depth attachment is used.
+            // 使用深度引导时，不应覆盖摄像机目标，因此应使用摄像机的 MSAA 深度附件。
             if (renderingData.cameraData.renderer.useDepthPriming && (renderingData.cameraData.renderType == CameraRenderType.Base || renderingData.cameraData.clearDepth))
             {
                 ConfigureTarget(renderingData.cameraData.renderer.cameraDepthTargetHandle);
                 // Only clear depth here so we don't clear any bound color target. It might be unused by this pass but that doesn't mean we can just clear it. (e.g. in case of overlay cameras + depth priming)
+                // 这里只清除深度，因此我们不会清除任何绑定的色彩目标。在此过程中，它可能未被使用，但这并不意味着我们可以直接清除它。(例如，在叠加摄像机 + 深度处理的情况下）
                 ConfigureClear(ClearFlag.Depth, Color.black);
             }
             // When not using depth priming the camera target should be set to our non MSAA depth target.
