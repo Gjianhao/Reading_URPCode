@@ -32,6 +32,7 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
 
         /// <summary>
         /// Specify that the pass will use a Texture resource as a depth buffer.
+        /// 指定 Pass 将使用纹理资源作为深度缓冲区。
         /// </summary>
         /// <param name="input">The Texture resource to use as a depth buffer during the pass.</param>
         /// <param name="flags">Specify the access level for the depth buffer. This allows you to say whether you will read from or write to the depth buffer, or do both.</param>
@@ -220,8 +221,9 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
         }
 
         /// <summary>
-        /// Allow or not pass culling
+        /// Allow or not pass culling  允许或不通过剔除
         /// By default all passes can be culled out if the render graph detects it's not actually used.
+        /// 默认情况下，如果渲染图检测到没有实际使用，所有通道都会被剔除。
         /// In some cases, a pass may not write or read any texture but rather do something with side effects (like setting a global texture parameter for example).
         /// This function can be used to tell the system that it should not cull this pass.
         /// </summary>

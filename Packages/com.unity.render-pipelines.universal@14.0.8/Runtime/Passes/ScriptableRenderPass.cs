@@ -174,6 +174,7 @@ namespace UnityEngine.Rendering.Universal
     {
         /// <summary>
         /// RTHandle alias for BuiltinRenderTextureType.CameraTarget which is the backbuffer.
+        /// BuiltinRenderTextureType.CameraTarget 的 RTHandle 别名，它是后置缓冲区。
         /// </summary>
         static public RTHandle k_CameraTarget = RTHandles.Alloc(BuiltinRenderTextureType.CameraTarget);
 
@@ -565,7 +566,9 @@ namespace UnityEngine.Rendering.Universal
 
         /// <summary>
         /// Configures render targets for this render pass. Call this instead of CommandBuffer.SetRenderTarget.
+        /// 为这个render pass配置渲染目标。调用这个方法来代替 CommandBuffer.SetRenderTarget.
         /// This method should be called inside Configure.
+        /// 此方法应在 Configure 内部调用。
         /// </summary>
         /// <param name="colorAttachment">Color attachment handle.</param>
         /// <seealso cref="Configure"/>
@@ -574,6 +577,7 @@ namespace UnityEngine.Rendering.Universal
             m_UsesRTHandles = true;
             overrideCameraTarget = true;
 
+            // 为颜色附件数组进行赋值
             m_ColorAttachments[0] = colorAttachment;
             m_ColorAttachmentIds[0] = new RenderTargetIdentifier(colorAttachment.nameID, 0, CubemapFace.Unknown, -1);
             for (int i = 1; i < m_ColorAttachments.Length; ++i)
@@ -608,6 +612,7 @@ namespace UnityEngine.Rendering.Universal
 
         /// <summary>
         /// Configures clearing for the render targets for this render pass. Call this inside Configure.
+        /// 配置清除此render pass的渲染目标。在 Configure 内部调用。
         /// </summary>
         /// <param name="clearFlag">ClearFlag containing information about what targets to clear.</param>
         /// <param name="clearColor">Clear color.</param>

@@ -473,8 +473,8 @@ namespace UnityEngine.Rendering.Universal
         }
 
         /// <summary>
-        /// Returns the camera depth target for this renderer.
-        /// It's only valid to call cameraDepthTarget in the scope of <c>ScriptableRenderPass</c>.
+        /// Returns the camera depth target for this renderer. 返回此渲染器的相机深度目标
+        /// It's only valid to call cameraDepthTarget in the scope of <c>ScriptableRenderPass</c>.仅仅在此范围内调用是有效的
         /// <seealso cref="ScriptableRenderPass"/>.
         /// </summary>
         public RTHandle cameraDepthTargetHandle
@@ -571,7 +571,9 @@ namespace UnityEngine.Rendering.Universal
         bool m_IsPipelineExecuting = false;
 
         // Temporary variable to disable custom passes using render pass ( due to it potentially breaking projects with custom render features )
+        // 临时变量，用于禁用使用渲染通行证的自定义通行证（因为它可能会破坏具有自定义渲染功能的项目）
         // To enable it - override SupportsNativeRenderPass method in the feature and return true
+        // 要启用它--覆盖功能中的 SupportsNativeRenderPass 方法并返回 true
         internal bool disableNativeRenderPassInFeatures = false;
 
         internal bool useRenderPassEnabled = false;

@@ -53,6 +53,7 @@ namespace UnityEngine.Rendering
     /// <summary>
     /// A RTHandle is a RenderTexture that scales automatically with the camera size.
     /// This allows proper reutilization of RenderTexture memory when different cameras with various sizes are used during rendering.
+    /// RTHandle 是一种渲染纹理，可随摄像机尺寸自动缩放。这样，在渲染过程中使用不同尺寸的摄像头时，就可以适当地重新利用渲染纹理内存。
     /// <seealso cref="RTHandleSystem"/>
     /// </summary>
     public class RTHandle

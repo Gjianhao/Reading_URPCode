@@ -214,7 +214,7 @@ namespace UnityEngine.Experimental.Rendering.RenderGraphModule
     }
 
     /// <summary>
-    /// This class is the main entry point of the Render Graph system.
+    /// This class is the main entry point of the Render Graph system. 该类是渲染图系统的主要入口。
     /// </summary>
     public class RenderGraph
     {

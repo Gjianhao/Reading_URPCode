@@ -91,8 +91,8 @@ namespace UnityEngine.Rendering.Universal
 #endif
         /// <summary>Property to control the depth priming behavior of the forward rendering path.</summary>
         public DepthPrimingMode depthPrimingMode { get { return m_DepthPrimingMode; } set { m_DepthPrimingMode = value; } }
-        DepthOnlyPass m_DepthPrepass;
-        DepthNormalOnlyPass m_DepthNormalPrepass;
+        DepthOnlyPass m_DepthPrepass; // 只提前渲染深度的Pass
+        DepthNormalOnlyPass m_DepthNormalPrepass; // 提前渲染深度和法线
         CopyDepthPass m_PrimedDepthCopyPass;
         MotionVectorRenderPass m_MotionVectorPass;
         MainLightShadowCasterPass m_MainLightShadowCasterPass;
@@ -610,6 +610,7 @@ namespace UnityEngine.Rendering.Universal
             bool cameraHasPostProcessingWithDepth = applyPostProcessing && cameraData.postProcessingRequiresDepthTexture;
 
             // TODO: We could cache and generate the LUT before rendering the stack
+            // TODO: 我们可以在渲染堆栈之前缓存并生成 LUT
             bool generateColorGradingLUT = cameraData.postProcessEnabled && m_PostProcessPasses.isCreated;
             bool isSceneViewOrPreviewCamera = cameraData.isSceneViewCamera || cameraData.cameraType == CameraType.Preview;
             useDepthPriming = IsDepthPrimingEnabled(ref cameraData);
@@ -930,15 +931,20 @@ namespace UnityEngine.Rendering.Universal
                 cmd.Clear();
             }
 
+            // 需要提前深度纹理
             if (requiresDepthPrepass)
             {
+                // 需要法线和深度纹理
                 if (renderPassInputs.requiresNormalsTexture)
                 {
+                    // 是延迟渲染
                     if (this.renderingModeActual == RenderingMode.Deferred)
                     {
                         // In deferred mode, depth-normal prepass does really primes the depth and normal buffers, instead of creating a copy.
+                        // 延迟模式下，depth-normal prepass是事先做缓冲，不是生成拷贝。
                         // It is necessary because we need to render depth&normal for forward-only geometry and it is the only way
                         // to get them before the SSAO pass.
+                        // 这是必要的，因为我们需要为仅向前的几何体渲染深度和法线，这是在通过 SSAO 之前获取它们的唯一方法。
 
                         int gbufferNormalIndex = m_DeferredLights.GBufferNormalSmoothnessIndex;
                         if (m_DeferredLights.UseRenderingLayers)
@@ -949,6 +955,7 @@ namespace UnityEngine.Rendering.Universal
                             m_DepthNormalPrepass.Setup(m_ActiveCameraDepthAttachment, m_DeferredLights.GbufferAttachments[gbufferNormalIndex]);
 
                         // Only render forward-only geometry, as standard geometry will be rendered as normal into the gbuffer.
+                        // 只渲染只向前渲染的几何图形，标准几何图形将法线渲染到 gbuffer 中。
                         if (RenderPassEvent.AfterRenderingGbuffer <= renderPassInputs.requiresDepthNormalAtEvent &&
                             renderPassInputs.requiresDepthNormalAtEvent <= RenderPassEvent.BeforeRenderingOpaques)
                             m_DepthNormalPrepass.shaderTagIds = k_DepthNormalsOnly;
@@ -966,6 +973,7 @@ namespace UnityEngine.Rendering.Universal
                 else
                 {
                     // Deferred renderer does not require a depth-prepass to generate samplable depth texture.
+                    // 延迟渲染不需要z-prepass来生成可采样的深度纹理。
                     if (this.renderingModeActual != RenderingMode.Deferred)
                     {
                         m_DepthPrepass.Setup(cameraTargetDescriptor, m_DepthTexture);
@@ -974,8 +982,9 @@ namespace UnityEngine.Rendering.Universal
                 }
             }
 
-            // depth priming still needs to copy depth because the prepass doesn't target anymore CameraDepthTexture
-            // TODO: this is unoptimal, investigate optimizations
+            // depth priming still needs to copy depth because the prepass doesn't target anymore CameraDepthTexture。
+            // depth priming 仍然需要拷贝深度，因为prepass不再针对 CameraDepthTexture
+            // TODO: this is unoptimal, investigate optimizations 这是不理想的，需要进行优化
             if (useDepthPriming)
             {
                 m_PrimedDepthCopyPass.Setup(m_ActiveCameraDepthAttachment, m_DepthTexture);

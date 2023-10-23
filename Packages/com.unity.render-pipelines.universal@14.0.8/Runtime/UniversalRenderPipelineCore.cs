@@ -348,6 +348,7 @@ namespace UnityEngine.Rendering.Universal
 
         /// <summary>
         /// True if this camera should clear depth buffer. This setting only applies to cameras of type <c>CameraRenderType.Overlay</c>
+        /// 如果摄像机应清除深度缓冲区，则设置为 True。此设置仅适用于 CameraRenderType.Overlay 类型的摄像机。
         /// <seealso cref="CameraRenderType"/>
         /// </summary>
         public bool clearDepth;
@@ -594,15 +595,20 @@ namespace UnityEngine.Rendering.Universal
 
         /// <summary>
         /// If set to true a final post-processing pass will be applied to apply dithering.
+        /// 如果设置为 "true"，最后的后期处理将应用抖动。
         /// This can be combined with post-processing antialiasing.
+        /// 这可以与后处理抗锯齿相结合。
         /// <seealso cref="antialiasing"/>
         /// </summary>
         public bool isDitheringEnabled;
 
         /// <summary>
         /// Controls the anti-alising mode used by the integrated post-processing stack.
+        /// 控制集成后处理栈使用的抗锯齿模式。
         /// When any other value other than <c>AntialiasingMode.None</c> is chosen, a final post-processing pass will be applied to apply anti-aliasing.
+        /// 如果选择了除 AntialiasingMode.None 以外的任何其他值，则将应用最后的后处理通道来应用抗锯齿。
         /// This pass can be combined with dithering.
+        /// 此 Pass 可与抖动结合使用。
         /// <see cref="AntialiasingMode"/>
         /// <seealso cref="isDitheringEnabled"/>
         /// </summary>
@@ -610,6 +616,7 @@ namespace UnityEngine.Rendering.Universal
 
         /// <summary>
         /// Controls the anti-alising quality of the anti-aliasing mode.
+        /// 控制抗锯齿模式的抗锯齿质量。
         /// <see cref="antialiasingQuality"/>
         /// <seealso cref="AntialiasingMode"/>
         /// </summary>
@@ -623,12 +630,14 @@ namespace UnityEngine.Rendering.Universal
 
         /// <summary>
         /// True if this camera is resolving rendering to the final camera render target.
+        /// 如果此摄像机正在解析渲染到最终的摄像机渲染目标，则为 True。
         /// When rendering a stack of cameras only the last camera in the stack will resolve to camera target.
+        /// 渲染堆栈摄像机时，只有堆栈中的最后一个摄像机才会解析到目标摄像机。
         /// </summary>
         public bool resolveFinalTarget;
 
         /// <summary>
-        /// Camera position in world space.
+        /// Camera position in world space. 世界空间的摄像机位置
         /// </summary>
         public Vector3 worldSpaceCameraPos;
 
@@ -639,6 +648,7 @@ namespace UnityEngine.Rendering.Universal
 
         /// <summary>
         /// Persistent TAA data, primarily for the accumulation texture.
+        /// 持久的 TAA 数据，主要用于累积纹理。
         /// </summary>
         internal TaaPersistentData taaPersistentData;
 
