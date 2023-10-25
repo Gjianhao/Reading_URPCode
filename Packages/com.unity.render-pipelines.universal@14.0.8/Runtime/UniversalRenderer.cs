@@ -6,16 +6,19 @@ using UnityEngine.Rendering.Universal.Internal;
 namespace UnityEngine.Rendering.Universal
 {
     /// <summary>
-    /// Rendering modes for Universal renderer.
+    /// Rendering modes for Universal renderer.通用管线渲染模式
     /// </summary>
     public enum RenderingMode
     {
         /// <summary>Render all objects and lighting in one pass, with a hard limit on the number of lights that can be applied on an object.</summary>
+        /// 一个Pass渲染所有对象和灯光，并严格限制对象上可应用的灯光数量。
         Forward = 0,
         /// <summary>Render all objects and lighting in one pass using a clustered data structure to access lighting data.</summary>
+        /// 使用聚类数据结构访问照明数据，一个Pass染所有对象和照明。
         [InspectorName("Forward+")]
         ForwardPlus = 2,
         /// <summary>Render all objects first in a g-buffer pass, then apply all lighting in a separate pass using deferred shading.</summary>
+        /// 首先在一个 g 缓冲通道中渲染所有对象，然后在另一个通道中使用延迟着色技术应用所有照明。
         Deferred = 1
     };
 
@@ -36,6 +39,7 @@ namespace UnityEngine.Rendering.Universal
     /// Default renderer for Universal RP.
     /// This renderer is supported on all Universal RP supported platforms.
     /// It uses a classic forward rendering strategy with per-object light culling.
+    /// 它采用了经典的前向渲染策略，并对每个对象进行光线剔除。
     /// </summary>
     public sealed partial class UniversalRenderer : ScriptableRenderer
     {
@@ -59,6 +63,7 @@ namespace UnityEngine.Rendering.Universal
         }
 
         /// <inheritdoc/>
+        /// 延迟渲染只能使用Base相机
         public override int SupportedCameraStackingTypes()
         {
             switch (m_RenderingMode)
@@ -74,22 +79,28 @@ namespace UnityEngine.Rendering.Universal
         }
 
         // Rendering mode setup from UI. The final rendering mode used can be different. See renderingModeActual.
+        // 从用户界面设置渲染模式。最终使用的渲染模式可能不同。请参见 renderingModeActual。
         internal RenderingMode renderingModeRequested => m_RenderingMode;
 
         // Actual rendering mode, which may be different (ex: wireframe rendering, hardware not capable of deferred rendering).
-        // 实际渲染模式可能不同（例如：线框渲染，硬件无法进行延迟渲染）。
-        internal RenderingMode renderingModeActual => renderingModeRequested == RenderingMode.Deferred && (GL.wireframe || (DebugHandler != null && DebugHandler.IsActiveModeUnsupportedForDeferred) || m_DeferredLights == null || !m_DeferredLights.IsRuntimeSupportedThisFrame() || m_DeferredLights.IsOverlay)
+        // 实际渲染模式，可能不同（例如：线框渲染，硬件无法进行延迟渲染）。
+        internal RenderingMode renderingModeActual => renderingModeRequested == RenderingMode.Deferred && 
+                                                      (GL.wireframe || 
+                                                       (DebugHandler != null && DebugHandler.IsActiveModeUnsupportedForDeferred) || 
+                                                       m_DeferredLights == null || 
+                                                       !m_DeferredLights.IsRuntimeSupportedThisFrame() || 
+                                                       m_DeferredLights.IsOverlay)
         ? RenderingMode.Forward
         : this.renderingModeRequested;
 
-        bool m_Clustering;
+        bool m_Clustering; // 渲染模式是否是Forward+
 
         internal bool accurateGbufferNormals => m_DeferredLights != null ? m_DeferredLights.AccurateGbufferNormals : false;
 
 #if ADAPTIVE_PERFORMANCE_2_1_0_OR_NEWER
         internal bool needTransparencyPass { get { return !UniversalRenderPipeline.asset.useAdaptivePerformance || !AdaptivePerformance.AdaptivePerformanceRenderSettings.SkipTransparentObjects;; } }
 #endif
-        /// <summary>Property to control the depth priming behavior of the forward rendering path.</summary>
+        /// <summary>Property to control the depth priming behavior of the forward rendering path. 在前向渲染中，用于控制z-prepass的行为的属性</summary>
         public DepthPrimingMode depthPrimingMode { get { return m_DepthPrimingMode; } set { m_DepthPrimingMode = value; } }
         DepthOnlyPass m_DepthPrepass; // 只提前渲染深度的Pass
         DepthNormalOnlyPass m_DepthNormalPrepass; // 提前渲染深度和法线
@@ -135,7 +146,7 @@ namespace UnityEngine.Rendering.Universal
         RTHandle m_MotionVectorColor;
         RTHandle m_MotionVectorDepth;
 
-        ForwardLights m_ForwardLights;
+        ForwardLights m_ForwardLights; // 前向照明数据
         DeferredLights m_DeferredLights;
         RenderingMode m_RenderingMode;
         DepthPrimingMode m_DepthPrimingMode;
@@ -167,7 +178,7 @@ namespace UnityEngine.Rendering.Universal
         /// <param name="data">The settings to create the renderer with.</param>
         public UniversalRenderer(UniversalRendererData data) : base(data)
         {
-            // Query and cache runtime platform info first before setting up URP.
+            // Query and cache runtime platform info first before setting up URP. 在设置 URP 之前，先查询和缓存运行时平台信息。
             PlatformAutoDetect.Initialize();
 
 #if ENABLE_VR && ENABLE_XR_MODULE
@@ -469,9 +480,11 @@ namespace UnityEngine.Rendering.Universal
         bool IsDepthPrimingEnabled(ref CameraData cameraData)
         {
             // depth priming requires an extra depth copy, disable it on platforms not supporting it (like GLES when MSAA is on)
+            // depth priming需要额外的深度拷贝，在不支持深度打底的平台上请禁用它（如开启 MSAA 时的 GLES）。
             if (!CanCopyDepth(ref cameraData))
                 return false;
 
+            // 除了移动端，都推荐深度Priming
             bool depthPrimingRequested = (m_DepthPrimingRecommended && m_DepthPrimingMode == DepthPrimingMode.Auto) || m_DepthPrimingMode == DepthPrimingMode.Forced;
             bool isForwardRenderingMode = m_RenderingMode == RenderingMode.Forward || m_RenderingMode == RenderingMode.ForwardPlus;
             bool isFirstCameraToWriteDepth = cameraData.renderType == CameraRenderType.Base || cameraData.clearDepth;
@@ -494,9 +507,9 @@ namespace UnityEngine.Rendering.Universal
         /// <inheritdoc />
         public override void Setup(ScriptableRenderContext context, ref RenderingData renderingData)
         {
-            m_ForwardLights.PreSetup(ref renderingData);
+            m_ForwardLights.PreSetup(ref renderingData); // 如果是Forward+模式
 
-            ref CameraData cameraData = ref renderingData.cameraData;
+            ref CameraData cameraData = ref renderingData.cameraData; // 保存多个与相机相关的渲染设置
             Camera camera = cameraData.camera;
             RenderTextureDescriptor cameraTargetDescriptor = cameraData.cameraTargetDescriptor;
 
@@ -527,9 +540,9 @@ namespace UnityEngine.Rendering.Universal
             }
 
             if (cameraData.cameraType != CameraType.Game)
-                useRenderPassEnabled = false;
+                useRenderPassEnabled = false;  // 不是Game相机就这是为false
 
-            // Special path for depth only offscreen cameras. Only write opaques + transparents.
+            // Special path for depth only offscreen cameras. Only write opaques + transparents. 仅用于深度离屏摄像机的特殊路径。只写入不透明+透明。
             bool isOffscreenDepthTexture = cameraData.targetTexture != null && cameraData.targetTexture.format == RenderTextureFormat.Depth;
             if (isOffscreenDepthTexture)
             {
@@ -556,8 +569,7 @@ namespace UnityEngine.Rendering.Universal
             RenderPassInputSummary renderPassInputs = GetRenderPassInputs(ref renderingData);
 
             // Gather render pass require rendering layers event and mask size
-            bool requiresRenderingLayer = RenderingLayerUtils.RequireRenderingLayers(this, rendererFeatures,
-                cameraTargetDescriptor.msaaSamples,
+            bool requiresRenderingLayer = RenderingLayerUtils.RequireRenderingLayers(this, rendererFeatures, cameraTargetDescriptor.msaaSamples,
                 out var renderingLayersEvent, out var renderingLayerMaskSize);
 
             // All passes that use write to rendering layers are excluded from gl
@@ -615,6 +627,7 @@ namespace UnityEngine.Rendering.Universal
             bool isSceneViewOrPreviewCamera = cameraData.isSceneViewCamera || cameraData.cameraType == CameraType.Preview;
             useDepthPriming = IsDepthPrimingEnabled(ref cameraData);
             // This indicates whether the renderer will output a depth texture.
+            // 表示渲染器是否会输出深度纹理。
             bool requiresDepthTexture = cameraData.requiresDepthTexture || renderPassInputs.requiresDepthTexture || m_DepthPrimingMode == DepthPrimingMode.Forced;
 
 #if UNITY_EDITOR
@@ -722,14 +735,18 @@ namespace UnityEngine.Rendering.Universal
             m_ColorBufferSystem.SetCameraSettings(colorDescriptor, FilterMode.Bilinear);
 
             // Configure all settings require to start a new camera stack (base camera only)
+            // 配置启动新摄像机堆栈所需的所有设置（仅限基础摄像机）
             if (cameraData.renderType == CameraRenderType.Base)
             {
                 // Scene filtering redraws the objects on top of the resulting frame. It has to draw directly to the sceneview buffer.
+                // 场景过滤会重绘结果帧顶部的对象。它必须直接绘制到场景视图缓冲区。
                 bool sceneViewFilterEnabled = camera.sceneViewFilterMode == Camera.SceneViewFilterMode.ShowFiltered;
                 bool intermediateRenderTexture = (createColorTexture || createDepthTexture) && !sceneViewFilterEnabled;
 
                 // RTHandles do not support combining color and depth in the same texture so we create them separately
+                // RTHandles 不支持在同一纹理中结合颜色和深度，因此我们要分别创建它们。
                 // Should be independent from filtered scene view
+                // 应独立于过滤后的场景视图
                 createDepthTexture |= createColorTexture;
 
                 RenderTargetIdentifier targetId = BuiltinRenderTextureType.CameraTarget;
@@ -942,10 +959,8 @@ namespace UnityEngine.Rendering.Universal
                     {
                         // In deferred mode, depth-normal prepass does really primes the depth and normal buffers, instead of creating a copy.
                         // 延迟模式下，depth-normal prepass是事先做缓冲，不是生成拷贝。
-                        // It is necessary because we need to render depth&normal for forward-only geometry and it is the only way
-                        // to get them before the SSAO pass.
+                        // It is necessary because we need to render depth&normal for forward-only geometry and it is the only way to get them before the SSAO pass.
                         // 这是必要的，因为我们需要为仅向前的几何体渲染深度和法线，这是在通过 SSAO 之前获取它们的唯一方法。
-
                         int gbufferNormalIndex = m_DeferredLights.GBufferNormalSmoothnessIndex;
                         if (m_DeferredLights.UseRenderingLayers)
                             m_DepthNormalPrepass.Setup(m_ActiveCameraDepthAttachment, m_DeferredLights.GbufferAttachments[gbufferNormalIndex], m_DeferredLights.GbufferAttachments[m_DeferredLights.GBufferRenderingLayers]);
@@ -1092,14 +1107,18 @@ namespace UnityEngine.Rendering.Universal
             }
 
             // Set the depth texture to the far Z if we do not have a depth prepass or copy depth
+            // 如果没有z-prepass或深度复制，则将深度纹理设置为远端 Z
             // Don't do this for Overlay cameras to not lose depth data in between cameras (as Base is guaranteed to be first)
+            // 不对叠加摄像机执行此操作，以免在摄像机之间丢失深度数据（因为底层保证在先）
             if (cameraData.renderType == CameraRenderType.Base && !requiresDepthPrepass && !requiresDepthCopyPass)
                 Shader.SetGlobalTexture("_CameraDepthTexture", SystemInfo.usesReversedZBuffer ? Texture2D.blackTexture : Texture2D.whiteTexture);
 
             if (copyColorPass)
             {
                 // TODO: Downsampling method should be stored in the renderer instead of in the asset.
+                // TODO: 降采样方法应存储在渲染器中，而不是资产中。
                 // We need to migrate this data to renderer. For now, we query the method in the active asset.
+                // 我们需要将这些数据迁移到渲染器中。现在，我们查询活动资产中的方法。
                 Downsampling downsamplingMethod = UniversalRenderPipeline.asset.opaqueDownsampling;
                 var descriptor = cameraTargetDescriptor;
                 CopyColorPass.ConfigureDescriptor(downsamplingMethod, ref descriptor, out var filterMode);

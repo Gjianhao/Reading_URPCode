@@ -26,7 +26,7 @@ namespace UnityEngine.Rendering.Universal
     }
 
     /// <summary>
-    /// Options for mixed lighting setup.
+    /// Options for mixed lighting setup. 混合照明设置选项
     /// </summary>
     public enum MixedLightingSetup
     {
@@ -41,13 +41,13 @@ namespace UnityEngine.Rendering.Universal
         ShadowMask,
 
         /// <summary>
-        /// Use this to select subtractive.
+        /// Use this to select subtractive. 消减式
         /// </summary>
         Subtractive,
     };
 
     /// <summary>
-    /// Enumeration that indicates what kind of image scaling is occurring if any
+    /// Enumeration that indicates what kind of image scaling is occurring if any  枚举表示正在进行哪种图像缩放（如果有的话
     /// </summary>
     internal enum ImageScalingMode
     {
@@ -77,9 +77,9 @@ namespace UnityEngine.Rendering.Universal
     }
 
     /// <summary>
-    /// Struct that flattens several rendering settings used to render a camera stack.
-    /// URP builds the <c>RenderingData</c> settings from several places, including the pipeline asset, camera and light settings.
-    /// The settings also might vary on different platforms and depending on if Adaptive Performance is used.
+    /// Struct that flattens several rendering settings used to render a camera stack. 用来渲染相机堆栈的一系列渲染设置
+    /// URP builds the <c>RenderingData</c> settings from several places, including the pipeline asset, camera and light settings. URP 会从多个地方创建 RenderingData 设置，包括管道资产、摄像机和灯光设置。
+    /// The settings also might vary on different platforms and depending on if Adaptive Performance is used. 在不同的平台上，设置也会有所不同，具体取决于是否使用了自适应性能。
     /// </summary>
     public struct RenderingData
     {
@@ -94,43 +94,43 @@ namespace UnityEngine.Rendering.Universal
         public CullingResults cullResults;
 
         /// <summary>
-        /// Holds several rendering settings related to camera.
+        /// Holds several rendering settings related to camera. 包含多个与相机相关的渲染设置。
         /// <see cref="CameraData"/>
         /// </summary>
         public CameraData cameraData;
 
         /// <summary>
-        /// Holds several rendering settings related to lights.
+        /// Holds several rendering settings related to lights. 包含多个与光源相关的渲染设置。
         /// <see cref="LightData"/>
         /// </summary>
         public LightData lightData;
 
         /// <summary>
-        /// Holds several rendering settings related to shadows.
+        /// Holds several rendering settings related to shadows. 包含多个与阴影相关的渲染设置。
         /// <see cref="ShadowData"/>
         /// </summary>
         public ShadowData shadowData;
 
         /// <summary>
-        /// Holds several rendering settings and resources related to the integrated post-processing stack.
+        /// Holds several rendering settings and resources related to the integrated post-processing stack. 保存与集成后处理堆栈相关的多个渲染设置和资源。
         /// <see cref="PostProcessData"/>
         /// </summary>
         public PostProcessingData postProcessingData;
 
         /// <summary>
         /// True if the pipeline supports dynamic batching.
-        /// This settings doesn't apply when drawing shadow casters. Dynamic batching is always disabled when drawing shadow casters.
+        /// This settings doesn't apply when drawing shadow casters. Dynamic batching is always disabled when drawing shadow casters. 动态批处理与阴影投射不共存
         /// </summary>
         public bool supportsDynamicBatching;
 
         /// <summary>
-        /// Holds per-object data that are requested when drawing
+        /// Holds per-object data that are requested when drawing 保存绘制时所需的每个对象的数据
         /// <see cref="PerObjectData"/>
         /// </summary>
         public PerObjectData perObjectData;
 
         /// <summary>
-        /// True if post-processing effect is enabled while rendering the camera stack.
+        /// True if post-processing effect is enabled while rendering the camera stack. 是否开启后处理
         /// </summary>
         public bool postProcessingEnabled;
     }
@@ -195,15 +195,15 @@ namespace UnityEngine.Rendering.Universal
 
 
     /// <summary>
-    /// Struct that holds settings related to camera.
+    /// Struct that holds settings related to camera. 保存相机相关设置的结构体。
     /// </summary>
     public struct CameraData
     {
-        // Internal camera data as we are not yet sure how to expose View in stereo context.
-        // We might change this API soon.
+        // Internal camera data as we are not yet sure how to expose View in stereo context. 内部相机数据，因为我们还不确定如何在立体上下文中公开 View。
+        // We might change this API soon. 我们可能很快会更改此 API。
         Matrix4x4 m_ViewMatrix;
         Matrix4x4 m_ProjectionMatrix;
-        Matrix4x4 m_JitterMatrix;
+        Matrix4x4 m_JitterMatrix; // 抖动矩阵
 
         internal void SetViewAndProjectionMatrix(Matrix4x4 viewMatrix, Matrix4x4 projectionMatrix)
         {
@@ -219,7 +219,7 @@ namespace UnityEngine.Rendering.Universal
             m_JitterMatrix = jitterMatrix;
         }
 
-        // Helper function to populate builtin stereo matricies as well as URP stereo matricies
+        // Helper function to populate builtin stereo matricies as well as URP stereo matricies 填充内置立体声矩阵和 URP 立体声矩阵的辅助函数
         internal void PushBuiltinShaderConstantsXR(CommandBuffer cmd, bool renderIntoTexture)
         {
 #if ENABLE_VR && ENABLE_XR_MODULE
@@ -320,12 +320,12 @@ namespace UnityEngine.Rendering.Universal
         public CameraRenderType renderType;
 
         /// <summary>
-        /// Controls the final target texture for a camera. If null camera will resolve rendering to screen.
+        /// Controls the final target texture for a camera. If null camera will resolve rendering to screen. 控制摄像机的最终目标纹理。如果为空，摄像机将解析渲染到屏幕。
         /// </summary>
         public RenderTexture targetTexture;
 
         /// <summary>
-        /// Render texture settings used to create intermediate camera textures for rendering.
+        /// Render texture settings used to create intermediate camera textures for rendering. RT 设置，用于为渲染创建中间相机纹理。
         /// </summary>
         public RenderTextureDescriptor cameraTargetDescriptor;
         internal Rect pixelRect;
@@ -1773,7 +1773,7 @@ namespace UnityEngine.Rendering.Universal
 #endif
 
         /// <summary>
-        /// If true, the runtime platform is an XR mobile platform.
+        /// If true, the runtime platform is an XR mobile platform. 如果为 "true"，则运行平台为 XR 移动平台。
         /// </summary>
         static internal bool isXRMobile { get; private set; } = false;
     }

@@ -114,7 +114,7 @@ namespace UnityEngine.Rendering.Universal
         }
 
         /// <summary>
-        /// The class responsible for providing access to debug view settings to renderers and render passes.
+        /// The class responsible for providing access to debug view settings to renderers and render passes. 负责向渲染器和passes提供调试视图设置使用权的类。
         /// </summary>
         internal DebugHandler DebugHandler { get; }
 

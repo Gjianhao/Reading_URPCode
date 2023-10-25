@@ -81,7 +81,9 @@ namespace UnityEngine.Rendering
         public ProfilingSampler(string name)
         {
             // Caution: Name of sampler MUST not match name provide to cmd.BeginSample(), otherwise
+            // 注意： 采样器名称必须与提供给 cmd.BeginSample() 的名称不匹配，否则
             // we get a mismatch of marker when enabling the profiler.
+            // 启用剖析器时，我们会得到一个不匹配的标记。
 #if UNITY_USE_RECORDER
             sampler = CustomSampler.Create(name, true); // Event markers, command buffer CPU profiling and GPU profiling
 #else

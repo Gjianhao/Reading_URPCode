@@ -355,6 +355,7 @@ namespace UnityEngine.Rendering.Universal
 
         /// <summary>
         /// Return the number of items in colorBuffers actually referring to an existing RenderTarget
+        /// 返回 colorBuffers 中实际引用现有 RenderTarget 的项目数
         /// </summary>
         /// <param name="colorBuffers"></param>
         /// <returns></returns>

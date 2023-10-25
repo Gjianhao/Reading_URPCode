@@ -10,7 +10,7 @@ using Unity.Collections.LowLevel.Unsafe;
 namespace UnityEngine.Rendering.Universal.Internal
 {
     /// <summary>
-    /// Computes and submits lighting data to the GPU.
+    /// Computes and submits lighting data to the GPU. 计算并向 GPU 提交照明数据。
     /// </summary>
     public class ForwardLights
     {
@@ -49,7 +49,7 @@ namespace UnityEngine.Rendering.Universal.Internal
 
         bool m_UseStructuredBuffer;
 
-        bool m_UseForwardPlus;
+        bool m_UseForwardPlus; // 是否使用Forward+
         int m_DirectionalLightCount;
         int m_ActualTileWidth;
         int2 m_TileResolution;
@@ -71,7 +71,7 @@ namespace UnityEngine.Rendering.Universal.Internal
         internal struct InitParams
         {
             public LightCookieManager lightCookieManager;
-            public bool forwardPlus;
+            public bool forwardPlus; // 是否是forward+模式
 
             static internal InitParams Create()
             {
@@ -156,6 +156,7 @@ namespace UnityEngine.Rendering.Universal.Internal
 
         internal void PreSetup(ref RenderingData renderingData)
         {
+            // 如果是Forward+模式
             if (m_UseForwardPlus)
             {
                 using var _ = new ProfilingScope(null, m_ProfilingSamplerFPSetup);

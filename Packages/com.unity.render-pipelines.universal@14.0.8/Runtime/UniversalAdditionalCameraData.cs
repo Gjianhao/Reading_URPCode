@@ -87,8 +87,11 @@ namespace UnityEngine.Rendering.Universal
 
     /// <summary>
     /// Holds information about the render type of a camera. Options are Base or Overlay.
+    /// 保存有关摄像机渲染类型的信息。选项包括基本渲染类型或叠加渲染类型。
     /// Base rendering type allows the camera to render to either the screen or to a texture.
+    /// 基本渲染类型允许摄像机渲染到屏幕或纹理。
     /// Overlay rendering type allows the camera to render on top of a previous camera output, thus compositing camera results.
+    /// 叠加渲染类型允许摄像机在前一个摄像机输出的基础上进行渲染，从而合成摄像机结果。
     /// </summary>
     public enum CameraRenderType
     {

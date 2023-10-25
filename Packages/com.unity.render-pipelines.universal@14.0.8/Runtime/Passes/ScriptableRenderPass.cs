@@ -624,10 +624,13 @@ namespace UnityEngine.Rendering.Universal
         }
 
         /// <summary>
-        /// This method is called by the renderer before rendering a camera
+        /// This method is called by the renderer before rendering a camera 在渲染摄像机之前，渲染器会调用此方法。
         /// Override this method if you need to to configure render targets and their clear state, and to create temporary render target textures.
+        /// 如果需要配置渲染目标及其清除状态，以及创建临时渲染目标纹理，请重载此方法。
         /// If a render pass doesn't override this method, this render pass renders to the active Camera's render target.
+        /// 如果一个渲染pass没有覆盖此方法，则此渲染pass会渲染到活动的摄像机的渲染目标。
         /// You should never call CommandBuffer.SetRenderTarget. Instead call <c>ConfigureTarget</c> and <c>ConfigureClear</c>.
+        /// 千万不要调用 CommandBuffer.SetRenderTarget。而应调用 ConfigureTarget 和 ConfigureClear。
         /// </summary>
         /// <param name="cmd">CommandBuffer to enqueue rendering commands. This will be executed by the pipeline.</param>
         /// <param name="renderingData">Current rendering state information</param>

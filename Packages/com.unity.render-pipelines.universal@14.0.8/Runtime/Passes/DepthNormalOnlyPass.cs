@@ -152,6 +152,7 @@ namespace UnityEngine.Rendering.Universal.Internal
         }
 
         /// <inheritdoc/>
+        /// 在完成相机渲染后调用。您可以使用此回调释放此渲染传递创建的任何资源，这些资源需要在摄像机完成渲染后进行清理。相机堆栈中的所有相机都会调用此方法。
         public override void OnCameraCleanup(CommandBuffer cmd)
         {
             if (cmd == null)
@@ -165,12 +166,12 @@ namespace UnityEngine.Rendering.Universal.Internal
 
         private class PassData
         {
-            internal TextureHandle cameraDepthTexture;
-            internal TextureHandle cameraNormalsTexture;
-            internal RenderingData renderingData;
+            internal TextureHandle cameraDepthTexture; // 相机深度纹理
+            internal TextureHandle cameraNormalsTexture; // 相机法线纹理
+            internal RenderingData renderingData; // 渲染数据
             internal List<ShaderTagId> shaderTagIds;
             internal FilteringSettings filteringSettings;
-            internal bool enableRenderingLayers;
+            internal bool enableRenderingLayers; // 开启渲染层
         }
 
         internal void Render(RenderGraph renderGraph, out TextureHandle cameraNormalsTexture, out TextureHandle cameraDepthTexture, ref RenderingData renderingData)
