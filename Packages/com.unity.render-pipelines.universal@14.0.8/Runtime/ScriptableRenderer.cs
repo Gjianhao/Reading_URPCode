@@ -493,6 +493,7 @@ namespace UnityEngine.Rendering.Universal
 
         /// <summary>
         /// Returns a list of renderer features added to this renderer.
+        /// 返回添加到此渲染器的renderer features列表。
         /// <seealso cref="ScriptableRendererFeature"/>
         /// </summary>
         protected List<ScriptableRendererFeature> rendererFeatures

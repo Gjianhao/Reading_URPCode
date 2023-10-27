@@ -63,6 +63,7 @@ namespace UnityEngine.Rendering.Universal
 
         /// <summary>
         /// Override this method and return true that renderer would produce rendering layers texture.
+        /// 重载此方法并返回 true，表示渲染器将生成渲染图层纹理。
         /// </summary>
         /// <param name="isDeferred">True if renderer is using deferred rendering mode</param>
         /// <param name="atEvent">Requeted event at which rendering layers texture will be produced</param>

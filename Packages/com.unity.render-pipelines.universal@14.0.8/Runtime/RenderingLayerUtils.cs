@@ -83,17 +83,17 @@ namespace UnityEngine.Rendering.Universal
         /// <param name="combinedMaskSize">The mask size of rendering layers texture</param>
         public static bool RequireRenderingLayers(UniversalRenderer universalRenderer, List<ScriptableRendererFeature> rendererFeatures, int msaaSampleCount, out Event combinedEvent, out MaskSize combinedMaskSize)
         {
-            combinedEvent = Event.Opaque;
-            combinedMaskSize = MaskSize.Bits8;
+            combinedEvent = Event.Opaque; // 输出的事件
+            combinedMaskSize = MaskSize.Bits8; // 输出的遮罩大小
 
-            bool isDeferred = universalRenderer.renderingModeActual == RenderingMode.Deferred;
+            bool isDeferred = universalRenderer.renderingModeActual == RenderingMode.Deferred; // 是否是延迟渲染
             bool result = false;
             foreach (var rendererFeature in rendererFeatures)
             {
                 if (rendererFeature.isActive)
                 {
                     result |= rendererFeature.RequireRenderingLayers(isDeferred, out Event rendererEvent, out MaskSize rendererMaskSize);
-                    combinedEvent = Combine(combinedEvent, rendererEvent);
+                    combinedEvent = Combine(combinedEvent, rendererEvent); // 取最小
                     combinedMaskSize = Combine(combinedMaskSize, rendererMaskSize);
                 }
             }

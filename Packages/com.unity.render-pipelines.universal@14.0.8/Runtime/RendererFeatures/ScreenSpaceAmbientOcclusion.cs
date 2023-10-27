@@ -231,8 +231,10 @@ namespace UnityEngine.Rendering.Universal {
                     m_CurrentSettings.Source = ScreenSpaceAmbientOcclusionSettings.DepthSource.DepthNormals;
                 }
                 else {
-                    // Rendering after PrePasses is usually correct except when depth priming is in play:
+                    // Rendering after PrePasses is usually correct except when depth priming is in play: 
+                    // 预处理后的渲染通常都是正确的，除非是在深度打底的情况下：
                     // then we rely on a depth resolve taking place after the PrePasses in order to have it ready for SSAO.
+                    // 那么我们就需要在预演之后进行深度解析，以便为 SSAO 做好准备。
                     // Hence we set the event to RenderPassEvent.AfterRenderingPrePasses + 1 at the earliest.
                     renderPassEvent = m_CurrentSettings.AfterOpaque ? RenderPassEvent.AfterRenderingOpaques : RenderPassEvent.AfterRenderingPrePasses + 1;
                 }
@@ -243,7 +245,7 @@ namespace UnityEngine.Rendering.Universal {
                         ConfigureInput(ScriptableRenderPassInput.Depth);
                         break;
                     case ScreenSpaceAmbientOcclusionSettings.DepthSource.DepthNormals:
-                        ConfigureInput(ScriptableRenderPassInput.Normal); // need depthNormal prepass for forward-only geometry
+                        ConfigureInput(ScriptableRenderPassInput.Normal); // need depthNormal prepass for forward-only geometry 默认是这个 Depth + Normals
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();

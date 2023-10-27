@@ -568,12 +568,14 @@ namespace UnityEngine.Rendering.Universal
             // Gather render passe input requirements 收集渲染输入要求
             RenderPassInputSummary renderPassInputs = GetRenderPassInputs(ref renderingData);
 
-            // Gather render pass require rendering layers event and mask size
+            // Gather render pass require rendering layers event and mask size 收集渲染传递需要渲染图层事件和掩码大小
             bool requiresRenderingLayer = RenderingLayerUtils.RequireRenderingLayers(this, rendererFeatures, cameraTargetDescriptor.msaaSamples,
                 out var renderingLayersEvent, out var renderingLayerMaskSize);
 
             // All passes that use write to rendering layers are excluded from gl
+            // 所有使用写入渲染层的传递都不包括在 gl 中。
             // So we disable it to avoid setting multiple render targets
+            // 因此，我们将其禁用，以避免设置多个渲染目标
             if (IsGLDevice())
                 requiresRenderingLayer = false;
 
@@ -1402,11 +1404,12 @@ namespace UnityEngine.Rendering.Universal
             for (int i = 0; i < activeRenderPassQueue.Count; ++i)
             {
                 ScriptableRenderPass pass = activeRenderPassQueue[i]; // 返回渲染器中渲染Pass列表
+                // pass.input是在 ConfigureInput 方法里设置的，需要哪个就设为true
                 bool needsDepth = (pass.input & ScriptableRenderPassInput.Depth) != ScriptableRenderPassInput.None;
                 bool needsNormals = (pass.input & ScriptableRenderPassInput.Normal) != ScriptableRenderPassInput.None;
                 bool needsColor = (pass.input & ScriptableRenderPassInput.Color) != ScriptableRenderPassInput.None;
                 bool needsMotion = (pass.input & ScriptableRenderPassInput.Motion) != ScriptableRenderPassInput.None;
-                bool eventBeforeMainRendering = pass.renderPassEvent <= beforeMainRenderingEvent;
+                bool eventBeforeMainRendering = pass.renderPassEvent <= beforeMainRenderingEvent; // 渲染顺序在这个主事件之前，为true
 
                 // TODO: Need a better way to handle this, probably worth to recheck after render graph 需要一个更好的方法来处理这个问题，也许值得在渲染图形后重新检查
                 // DBuffer requires color texture created as it does not handle y flip correctly DBuffer 需要创建彩色纹理，因为它无法正确处理 y 翻转
@@ -1551,7 +1554,7 @@ namespace UnityEngine.Rendering.Universal
 
         bool CanCopyDepth(ref CameraData cameraData)
         {
-            bool msaaEnabledForCamera = cameraData.cameraTargetDescriptor.msaaSamples > 1; // 是否开启了2倍以上的采样抗锯齿
+            bool msaaEnabledForCamera = cameraData.cameraTargetDescriptor.msaaSamples > 1; // 是否开启了MSAA
             bool supportsTextureCopy = SystemInfo.copyTextureSupport != CopyTextureSupport.None; // 支持拷贝纹理
             bool supportsDepthTarget = RenderingUtils.SupportsRenderTextureFormat(RenderTextureFormat.Depth); // 是否支持深度纹理
             bool supportsDepthCopy = !msaaEnabledForCamera && (supportsDepthTarget || supportsTextureCopy); // 如果开启了MSAA，就不支持深度的拷贝
