@@ -106,7 +106,7 @@ namespace UnityEngine.Rendering.Universal
         DepthNormalOnlyPass m_DepthNormalPrepass; // 提前渲染深度和法线
         CopyDepthPass m_PrimedDepthCopyPass;
         MotionVectorRenderPass m_MotionVectorPass;
-        MainLightShadowCasterPass m_MainLightShadowCasterPass;
+        MainLightShadowCasterPass m_MainLightShadowCasterPass; // 主光源阴影投射Pass
         AdditionalLightsShadowCasterPass m_AdditionalLightsShadowCasterPass;
         GBufferPass m_GBufferPass;
         CopyDepthPass m_GBufferCopyDepthPass;
@@ -184,6 +184,8 @@ namespace UnityEngine.Rendering.Universal
 #if ENABLE_VR && ENABLE_XR_MODULE
             Experimental.Rendering.XRSystem.Initialize(XRPassUniversal.Create, data.xrSystemData.shaders.xrOcclusionMeshPS, data.xrSystemData.shaders.xrMirrorViewPS);
 #endif
+            
+            // 创建材质
             m_BlitMaterial = CoreUtils.CreateEngineMaterial(data.shaders.coreBlitPS);
             m_BlitHDRMaterial = CoreUtils.CreateEngineMaterial(data.shaders.blitHDROverlay);
             m_CopyDepthMaterial = CoreUtils.CreateEngineMaterial(data.shaders.copyDepthPS);
@@ -192,6 +194,7 @@ namespace UnityEngine.Rendering.Universal
             m_CameraMotionVecMaterial = CoreUtils.CreateEngineMaterial(data.shaders.cameraMotionVector);
             m_ObjectMotionVecMaterial = CoreUtils.CreateEngineMaterial(data.shaders.objectMotionVector);
 
+            // 设置模板测试状态
             StencilStateData stencilData = data.defaultStencilState;
             m_DefaultStencilState = StencilState.defaultValue;
             m_DefaultStencilState.enabled = stencilData.overrideStencilState;
@@ -200,7 +203,8 @@ namespace UnityEngine.Rendering.Universal
             m_DefaultStencilState.SetFailOperation(stencilData.failOperation);
             m_DefaultStencilState.SetZFailOperation(stencilData.zFailOperation);
 
-            m_IntermediateTextureMode = data.intermediateTextureMode;
+            // 中间纹理渲染模式
+            m_IntermediateTextureMode = data.intermediateTextureMode; 
 
             if (UniversalRenderPipeline.asset?.supportsLightCookies ?? false)
             {
@@ -215,8 +219,8 @@ namespace UnityEngine.Rendering.Universal
                 m_LightCookieManager = new LightCookieManager(ref settings);
             }
 
-            this.stripShadowsOffVariants = true;
-            this.stripAdditionalLightOffVariants = true;
+            this.stripShadowsOffVariants = true; // 去除阴影关闭的变体
+            this.stripAdditionalLightOffVariants = true; // 去除额外光源关闭的变体
 #if ENABLE_VR && ENABLE_VR_MODULE
 #if PLATFORM_WINRT || PLATFORM_ANDROID
             // AdditionalLightOff variant is available on HL&Quest platform due to performance consideration.
@@ -224,6 +228,7 @@ namespace UnityEngine.Rendering.Universal
 #endif
 #endif
 
+            // 前向光源初始化
             ForwardLights.InitParams forwardInitParams;
             forwardInitParams.lightCookieManager = m_LightCookieManager;
             forwardInitParams.forwardPlus = data.renderingMode == RenderingMode.ForwardPlus;
@@ -235,6 +240,7 @@ namespace UnityEngine.Rendering.Universal
             this.m_CopyDepthMode = data.copyDepthMode;
             useRenderPassEnabled = data.useNativeRenderPass && SystemInfo.graphicsDeviceType != GraphicsDeviceType.OpenGLES2;
 
+            // 移动平台不推荐z-prepass
 #if UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
             this.m_DepthPrimingRecommended = false;
 #else
@@ -243,6 +249,7 @@ namespace UnityEngine.Rendering.Universal
 
             // Note: Since all custom render passes inject first and we have stable sort,
             // we inject the builtin passes in the before events.
+            // 注意:由于所有自定义渲染通道都是先注入的，而且我们有稳定的排序，所以我们在before事件中注入内置的通道。
             m_MainLightShadowCasterPass = new MainLightShadowCasterPass(RenderPassEvent.BeforeRenderingShadows);
             m_AdditionalLightsShadowCasterPass = new AdditionalLightsShadowCasterPass(RenderPassEvent.BeforeRenderingShadows);
 
@@ -255,11 +262,13 @@ namespace UnityEngine.Rendering.Universal
             m_DepthNormalPrepass = new DepthNormalOnlyPass(RenderPassEvent.BeforeRenderingPrePasses, RenderQueueRange.opaque, data.opaqueLayerMask);
             m_MotionVectorPass = new MotionVectorRenderPass(m_CameraMotionVecMaterial, m_ObjectMotionVecMaterial);
 
+            // 如果是前向渲染
             if (renderingModeRequested == RenderingMode.Forward || renderingModeRequested == RenderingMode.ForwardPlus)
             {
                 m_PrimedDepthCopyPass = new CopyDepthPass(RenderPassEvent.AfterRenderingPrePasses, m_CopyDepthMaterial, true);
             }
 
+            // 如果是延迟渲染
             if (this.renderingModeRequested == RenderingMode.Deferred)
             {
                 var deferredInitParams = new DeferredLights.InitParams();
@@ -306,7 +315,7 @@ namespace UnityEngine.Rendering.Universal
             m_CopyColorPass = new CopyColorPass(RenderPassEvent.AfterRenderingSkybox, m_SamplingMaterial, m_BlitMaterial);
 #if ADAPTIVE_PERFORMANCE_2_1_0_OR_NEWER
             if (needTransparencyPass)
-#endif
+# endif
             {
                 m_TransparentSettingsPass = new TransparentSettingsPass(RenderPassEvent.BeforeRenderingTransparents, data.shadowTransparentReceive);
                 m_RenderTransparentForwardPass = new DrawObjectsPass(URPProfileId.DrawTransparentObjects, false, RenderPassEvent.BeforeRenderingTransparents, RenderQueueRange.transparent, data.transparentLayerMask, m_DefaultStencilState, stencilData.stencilReference);
@@ -411,8 +420,7 @@ namespace UnityEngine.Rendering.Universal
         {
             if ((DebugHandler != null) && DebugHandler.IsActiveForCamera(ref cameraData))
             {
-                if (DebugHandler.TryGetFullscreenDebugMode(out DebugFullScreenMode fullScreenDebugMode, out int textureHeightPercent) &&
-                    (fullScreenDebugMode != DebugFullScreenMode.ReflectionProbeAtlas || m_Clustering))
+                if (DebugHandler.TryGetFullscreenDebugMode(out DebugFullScreenMode fullScreenDebugMode, out int textureHeightPercent) && (fullScreenDebugMode != DebugFullScreenMode.ReflectionProbeAtlas || m_Clustering))
                 {
                     Camera camera = cameraData.camera;
                     float screenWidth = camera.pixelWidth;
@@ -646,7 +654,9 @@ namespace UnityEngine.Rendering.Universal
 
             // Depth prepass is generated in the following cases:
             // - If game or offscreen camera requires it we check if we can copy the depth from the rendering opaques pass and use that instead.
+            // - 如果游戏或离屏的摄像机需要，我们会检查是否可以从渲染不透明pass中复制深度，然后使用它来代替。
             // - Scene or preview cameras always require a depth texture. We do a depth pre-pass to simplify it and it shouldn't matter much for editor.
+            // - 场景或预览摄像机总是需要深度纹理。我们会进行深度预处理来简化它，这对编辑器来说应该没什么影响。
             // - Render passes require it
             bool requiresDepthPrepass = (requiresDepthTexture || cameraHasPostProcessingWithDepth) && (!CanCopyDepth(ref renderingData.cameraData) || forcePrepass);
             requiresDepthPrepass |= isSceneViewOrPreviewCamera;
@@ -1424,7 +1434,7 @@ namespace UnityEngine.Rendering.Universal
                 inputSummary.requiresColorTexture |= needsColor;
                 inputSummary.requiresMotionVectors |= needsMotion;
                 if (needsDepth)
-                    inputSummary.requiresDepthTextureEarliestEvent = (RenderPassEvent)Mathf.Min((int)pass.renderPassEvent, (int)inputSummary.requiresDepthTextureEarliestEvent);
+                    inputSummary.requiresDepthTextureEarliestEvent = (RenderPassEvent)Mathf.Min((int)pass.renderPassEvent, (int)inputSummary.requiresDepthTextureEarliestEvent); // 需要深度时
                 if (needsNormals || needsDepth)
                     inputSummary.requiresDepthNormalAtEvent = (RenderPassEvent)Mathf.Min((int)pass.renderPassEvent, (int)inputSummary.requiresDepthNormalAtEvent);
             }
@@ -1552,14 +1562,21 @@ namespace UnityEngine.Rendering.Universal
                 !isCompatibleBackbufferTextureDimension || isCapturing || cameraData.requireSrgbConversion;
         }
 
+        /// <summary>
+        /// 是否能拷贝深度：
+        /// 1.如果没有开启MSAA，并且支持纹理的拷贝，就支持深度的拷贝
+        /// 2.或者如果开启了msaa，并且支持多重采样纹理，但是不能在GLES移动设备上
+        /// </summary>
+        /// <param name="cameraData"></param>
+        /// <returns></returns>
         bool CanCopyDepth(ref CameraData cameraData)
         {
             bool msaaEnabledForCamera = cameraData.cameraTargetDescriptor.msaaSamples > 1; // 是否开启了MSAA
             bool supportsTextureCopy = SystemInfo.copyTextureSupport != CopyTextureSupport.None; // 支持拷贝纹理
             bool supportsDepthTarget = RenderingUtils.SupportsRenderTextureFormat(RenderTextureFormat.Depth); // 是否支持深度纹理
-            bool supportsDepthCopy = !msaaEnabledForCamera && (supportsDepthTarget || supportsTextureCopy); // 如果开启了MSAA，就不支持深度的拷贝
+            bool supportsDepthCopy = !msaaEnabledForCamera && (supportsDepthTarget || supportsTextureCopy); // 如果没有开启MSAA，并且支持纹理的拷贝，就支持深度的拷贝
 
-            bool msaaDepthResolve = msaaEnabledForCamera && SystemInfo.supportsMultisampledTextures != 0; // 如果开启了msaa，并且支持多重采样纹理
+            bool msaaDepthResolve = msaaEnabledForCamera && SystemInfo.supportsMultisampledTextures != 0; // 或者如果开启了msaa，并且支持多重采样纹理，但是不能在GLES移动设备上
 
             // copying MSAA depth on GLES3 is giving invalid results. This won't be fixed by the driver team because it would introduce performance issues (more info in the Fogbugz issue 1339401 comments)
             // 在 GLES3 上复制 MSAA 深度的结果无效。驱动程序团队不会修复这个问题，因为这会带来性能问题（更多信息请参见 Fogbugz 问题 1339401 评论）。

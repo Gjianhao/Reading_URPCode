@@ -7,6 +7,7 @@ namespace UnityEngine.Rendering.Universal.Internal
 {
     /// <summary>
     /// Render all objects that have a 'DepthNormals' and/or 'DepthNormalsOnly' pass into the given depth and normal buffers.
+    /// 将所有具有 "DepthNormals "和/或 "DepthNormalsOnly " Pass的对象渲染到给定的深度和法线缓冲区中。
     /// </summary>
     public class DepthNormalOnlyPass : ScriptableRenderPass
     {

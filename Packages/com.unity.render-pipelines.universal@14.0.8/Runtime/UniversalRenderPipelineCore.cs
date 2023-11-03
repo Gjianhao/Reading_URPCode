@@ -376,6 +376,7 @@ namespace UnityEngine.Rendering.Universal
 
         /// <summary>
         /// True if this camera requires to write _CameraDepthTexture.
+        /// 如果相机需要写入 _CameraDepthTexture，则返回 true。
         /// </summary>
         public bool requiresDepthTexture;
 

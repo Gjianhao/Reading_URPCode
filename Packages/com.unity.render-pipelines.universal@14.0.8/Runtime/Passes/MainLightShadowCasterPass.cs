@@ -30,7 +30,7 @@ namespace UnityEngine.Rendering.Universal.Internal
         int m_ShadowCasterCascadesCount;
 
         int m_MainLightShadowmapID;
-        internal RTHandle m_MainLightShadowmapTexture;
+        internal RTHandle m_MainLightShadowmapTexture; // 主光源阴影纹理
         internal RTHandle m_EmptyLightShadowmapTexture;
 
         Matrix4x4[] m_MainLightShadowMatrices;

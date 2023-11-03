@@ -180,6 +180,7 @@ namespace UnityEngine.Rendering.Universal
 
         /// <summary>
         /// The event when the render pass executes.
+        /// pass 执行的事件
         /// </summary>
         public RenderPassEvent renderPassEvent { get; set; }
 

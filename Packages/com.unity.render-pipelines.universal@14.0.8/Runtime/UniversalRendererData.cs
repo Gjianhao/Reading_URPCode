@@ -11,6 +11,7 @@ namespace UnityEngine.Rendering.Universal
 {
     /// <summary>
     /// Defines if Unity will copy the depth that can be bound in shaders as _CameraDepthTexture after the opaques pass or after the transparents pass.
+    /// 定义 Unity 是在通过不透明效果后复制可在着色器中绑定为 _CameraDepthTexture 的深度，还是在通过透明效果后复制深度。
     /// </summary>
     public enum CopyDepthMode
     {
@@ -208,6 +209,7 @@ namespace UnityEngine.Rendering.Universal
 
         /// <summary>
         /// The default stencil state settings.
+        /// 默认的模板状态设置
         /// </summary>
         public StencilStateData defaultStencilState
         {
