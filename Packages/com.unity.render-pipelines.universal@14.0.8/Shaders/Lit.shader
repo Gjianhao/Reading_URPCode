@@ -5,7 +5,9 @@ Shader "Universal Render Pipeline/Lit"
         // Specular vs Metallic workflow
         _WorkflowMode("WorkflowMode", Float) = 1.0
 
+        // 使用标签[MainTexture]可以将此纹理设置为主纹理，等同于_MainTex；可以在脚本中通过mat.mainTexture = tex;直接传值；并且只能有一个主纹理。
         [MainTexture] _BaseMap("Albedo", 2D) = "white" {}
+        // 使用标签[MainColor]可以将此纹理设置为主颜色，等同于_Color；可以在脚本中通过mat.color = col;直接传值；并且只能有一个主颜色。
         [MainColor] _BaseColor("Color", Color) = (1,1,1,1)
 
         _Cutoff("Alpha Cutoff", Range(0.0, 1.0)) = 0.5
@@ -19,6 +21,7 @@ Shader "Universal Render Pipeline/Lit"
         _SpecColor("Specular", Color) = (0.2, 0.2, 0.2)
         _SpecGlossMap("Specular", 2D) = "white" {}
 
+        // [ToggleOff] 标签可以让数值类型的属性在材质面板上显示为开关样式。
         [ToggleOff] _SpecularHighlights("Specular Highlights", Float) = 1.0
         [ToggleOff] _EnvironmentReflections("Environment Reflections", Float) = 1.0
 
@@ -78,6 +81,7 @@ Shader "Universal Render Pipeline/Lit"
         // Universal Pipeline tag is required. If Universal render pipeline is not set in the graphics settings
         // this Subshader will fail. One can add a subshader below or fallback to Standard built-in to make this
         // material work with both Universal Render Pipeline and Builtin Unity Pipeline
+        // 需要使用Tags。如果图形设置中未设置通用渲染管线，该子着色器将失效。您可以在下面添加一个SubShader，或退回到标准内置着色器，使该材质同时适用于URP和Builtin管线
         Tags
         {
             "RenderType" = "Opaque"
@@ -93,6 +97,7 @@ Shader "Universal Render Pipeline/Lit"
         {
             // Lightmode matches the ShaderPassName set in UniversalRenderPipeline.cs. SRPDefaultUnlit and passes with
             // no LightMode tag are also rendered by Universal Render Pipeline
+            // Lightmode 与 UniversalRenderPipeline.cs 中设置的 ShaderPassName 相匹配。SRPDefaultUnlit 和没有 LightMode的Pass 也会由 Universal Render Pipeline 渲染。
             Name "ForwardLit"
             Tags
             {
@@ -116,15 +121,15 @@ Shader "Universal Render Pipeline/Lit"
 
             // -------------------------------------
             // Material Keywords
-            #pragma shader_feature_local _NORMALMAP
+            #pragma shader_feature_local _NORMALMAP  // 当添加了法线贴图，就会传入该关键词
             #pragma shader_feature_local _PARALLAXMAP
-            #pragma shader_feature_local _RECEIVE_SHADOWS_OFF
+            #pragma shader_feature_local _RECEIVE_SHADOWS_OFF  // 当关闭接受阴影，就会传入该关键词
             #pragma shader_feature_local _ _DETAIL_MULX2 _DETAIL_SCALED
             #pragma shader_feature_local_fragment _SURFACE_TYPE_TRANSPARENT
-            #pragma shader_feature_local_fragment _ALPHATEST_ON
-            #pragma shader_feature_local_fragment _ _ALPHAPREMULTIPLY_ON _ALPHAMODULATE_ON
-            #pragma shader_feature_local_fragment _EMISSION
-            #pragma shader_feature_local_fragment _METALLICSPECGLOSSMAP
+            #pragma shader_feature_local_fragment _ALPHATEST_ON   //  当开启了透明裁切
+            #pragma shader_feature_local_fragment _ _ALPHAPREMULTIPLY_ON _ALPHAMODULATE_ON  // 混合模式选择
+            #pragma shader_feature_local_fragment _EMISSION   //  当开启自发光
+            #pragma shader_feature_local_fragment _METALLICSPECGLOSSMAP  
             #pragma shader_feature_local_fragment _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
             #pragma shader_feature_local_fragment _OCCLUSIONMAP
             #pragma shader_feature_local_fragment _SPECULARHIGHLIGHTS_OFF
@@ -135,12 +140,12 @@ Shader "Universal Render Pipeline/Lit"
             // Universal Pipeline keywords
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
             #pragma multi_compile _ _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS
-            #pragma multi_compile _ EVALUATE_SH_MIXED EVALUATE_SH_VERTEX
+            #pragma multi_compile _ EVALUATE_SH_MIXED EVALUATE_SH_VERTEX   // 球谐
             #pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
             #pragma multi_compile_fragment _ _REFLECTION_PROBE_BLENDING
             #pragma multi_compile_fragment _ _REFLECTION_PROBE_BOX_PROJECTION
-            #pragma multi_compile_fragment _ _SHADOWS_SOFT
-            #pragma multi_compile_fragment _ _SCREEN_SPACE_OCCLUSION
+            #pragma multi_compile_fragment _ _SHADOWS_SOFT   // 软阴影
+            #pragma multi_compile_fragment _ _SCREEN_SPACE_OCCLUSION  // SSAO
             #pragma multi_compile_fragment _ _DBUFFER_MRT1 _DBUFFER_MRT2 _DBUFFER_MRT3
             #pragma multi_compile_fragment _ _LIGHT_LAYERS
             #pragma multi_compile_fragment _ _LIGHT_COOKIES
@@ -155,8 +160,8 @@ Shader "Universal Render Pipeline/Lit"
             #pragma multi_compile _ DIRLIGHTMAP_COMBINED
             #pragma multi_compile _ LIGHTMAP_ON
             #pragma multi_compile _ DYNAMICLIGHTMAP_ON
-            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
-            #pragma multi_compile_fog
+            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE  // LOD的平滑过渡
+            #pragma multi_compile_fog   // 雾效开启
             #pragma multi_compile_fragment _ DEBUG_DISPLAY
 
             //--------------------------------------
@@ -170,6 +175,7 @@ Shader "Universal Render Pipeline/Lit"
             ENDHLSL
         }
 
+        // 阴影投射
         Pass
         {
             Name "ShadowCaster"
@@ -220,6 +226,7 @@ Shader "Universal Render Pipeline/Lit"
             ENDHLSL
         }
 
+        // 延迟GBuffer
         Pass
         {
             // Lightmode matches the ShaderPassName set in UniversalRenderPipeline.cs. SRPDefaultUnlit and passes with
@@ -300,6 +307,7 @@ Shader "Universal Render Pipeline/Lit"
             ENDHLSL
         }
 
+        // 深度
         Pass
         {
             Name "DepthOnly"
@@ -344,6 +352,7 @@ Shader "Universal Render Pipeline/Lit"
         }
 
         // This pass is used when drawing to a _CameraNormalsTexture texture
+        // 当绘制深度法线图时，使用这个pass
         Pass
         {
             Name "DepthNormals"
@@ -394,6 +403,7 @@ Shader "Universal Render Pipeline/Lit"
         }
 
         // This pass it not used during regular rendering, only for lightmap baking.
+        // 该pass在常规渲染中不使用，仅用于光照贴图烘焙。
         Pass
         {
             Name "Meta"
@@ -433,6 +443,7 @@ Shader "Universal Render Pipeline/Lit"
             ENDHLSL
         }
 
+        // 2D渲染
         Pass
         {
             Name "Universal2D"

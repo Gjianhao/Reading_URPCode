@@ -3,6 +3,7 @@
 
 // VT is not supported in URP (for now) this ensures any shaders using the VT
 // node work by falling to regular texture sampling.
+// URP（目前）不支持 VT，这将确保任何使用 VT 节点的任何着色器都能以常规纹理采样的方式运行。
 #define FORCE_VIRTUAL_TEXTURING_OFF 1
 
 #if defined(_FORWARD_PLUS)

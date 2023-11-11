@@ -12,6 +12,7 @@
 #endif
 
 // NOTE: Do not ifdef the properties here as SRP batcher can not handle different layouts.
+// 注意：不要在此处对属性进行 ifdef，因为 SRP 批处理器无法处理不同的布局。
 CBUFFER_START(UnityPerMaterial)
 float4 _BaseMap_ST;
 float4 _DetailAlbedoMap_ST;
@@ -32,8 +33,11 @@ half _Surface;
 CBUFFER_END
 
 // NOTE: Do not ifdef the properties for dots instancing, but ifdef the actual usage.
+// 注意：不要为dots实例化定义 ifdef 属性，而要 ifdef 实际使用。
 // Otherwise you might break CPU-side as property constant-buffer offsets change per variant.
+// 否则，由于每个变量的属性常量缓冲区偏移量都会发生变化，可能会打破 CPU 端。
 // NOTE: Dots instancing is orthogonal to the constant buffer above.
+// 注意：Dots instancing与上述恒定缓冲区正交。
 #ifdef UNITY_DOTS_INSTANCING_ENABLED
 
 UNITY_DOTS_INSTANCING_START(MaterialPropertyMetadata)
@@ -69,14 +73,14 @@ UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
 #define _Surface                UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float  , _Surface)
 #endif
 
-TEXTURE2D(_ParallaxMap);        SAMPLER(sampler_ParallaxMap);
+TEXTURE2D(_ParallaxMap);        SAMPLER(sampler_ParallaxMap);   // 视察贴图
 TEXTURE2D(_OcclusionMap);       SAMPLER(sampler_OcclusionMap);
 TEXTURE2D(_DetailMask);         SAMPLER(sampler_DetailMask);
 TEXTURE2D(_DetailAlbedoMap);    SAMPLER(sampler_DetailAlbedoMap);
 TEXTURE2D(_DetailNormalMap);    SAMPLER(sampler_DetailNormalMap);
 TEXTURE2D(_MetallicGlossMap);   SAMPLER(sampler_MetallicGlossMap);
 TEXTURE2D(_SpecGlossMap);       SAMPLER(sampler_SpecGlossMap);
-TEXTURE2D(_ClearCoatMap);       SAMPLER(sampler_ClearCoatMap);
+TEXTURE2D(_ClearCoatMap);       SAMPLER(sampler_ClearCoatMap);  // 清漆贴图
 
 #ifdef _SPECULAR_SETUP
     #define SAMPLE_METALLICSPECULAR(uv) SAMPLE_TEXTURE2D(_SpecGlossMap, sampler_SpecGlossMap, uv)
@@ -84,6 +88,7 @@ TEXTURE2D(_ClearCoatMap);       SAMPLER(sampler_ClearCoatMap);
     #define SAMPLE_METALLICSPECULAR(uv) SAMPLE_TEXTURE2D(_MetallicGlossMap, sampler_MetallicGlossMap, uv)
 #endif
 
+// 金属和高光采样函数
 half4 SampleMetallicSpecGloss(float2 uv, half albedoAlpha)
 {
     half4 specGloss;

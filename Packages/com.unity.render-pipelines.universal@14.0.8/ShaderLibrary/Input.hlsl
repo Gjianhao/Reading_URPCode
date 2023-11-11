@@ -199,9 +199,12 @@ CBUFFER_END
 #define UNITY_PREV_MATRIX_I_M unity_MatrixPreviousMI
 
 // Note: #include order is important here.
+// 注意：这里的 #include 顺序很重要。
 // UnityInput.hlsl must be included before UnityInstancing.hlsl, so constant buffer
 // declarations don't fail because of instancing macros.
+// 必须先包含 UnityInput.hlsl，然后再包含 UnityInstancing.hlsl，这样常量缓冲区声明不会因为实例化宏而失败。
 // UniversalDOTSInstancing.hlsl must be included after UnityInstancing.hlsl
+// UniversalDOTSInstancing.hlsl 必须包含在 UnityInstancing.hlsl 之后。
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/UnityInput.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/UnityInstancing.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/UniversalDOTSInstancing.hlsl"
