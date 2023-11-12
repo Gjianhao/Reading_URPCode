@@ -41,13 +41,13 @@ struct InputData
     float4  positionCS;
     float3  normalWS;
     half3   viewDirectionWS;
-    float4  shadowCoord;
+    float4  shadowCoord;  // 阴影坐标
     half    fogCoord;
     half3   vertexLighting;
-    half3   bakedGI;
+    half3   bakedGI;  // 烘培全局光照
     float2  normalizedScreenSpaceUV;
     half4   shadowMask;
-    half3x3 tangentToWorld;
+    half3x3 tangentToWorld;  //切线转世界的矩阵
 
     #if defined(DEBUG_DISPLAY)
     half2   dynamicLightmapUV;
@@ -79,10 +79,10 @@ struct InputData
 //                      Constant Buffers                                     //
 ///////////////////////////////////////////////////////////////////////////////
 
-half4 _GlossyEnvironmentColor;
-half4 _SubtractiveShadowColor;
+half4 _GlossyEnvironmentColor;  // 环境的反射颜色
+half4 _SubtractiveShadowColor;  // 阴影的颜色
 
-half4 _GlossyEnvironmentCubeMap_HDR;
+half4 _GlossyEnvironmentCubeMap_HDR;  // 天空球
 TEXTURECUBE(_GlossyEnvironmentCubeMap);
 SAMPLER(sampler_GlossyEnvironmentCubeMap);
 

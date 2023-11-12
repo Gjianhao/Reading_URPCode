@@ -8,14 +8,14 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/AmbientOcclusion.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DBuffer.hlsl"
 
-#if defined(LIGHTMAP_ON)
-    #define DECLARE_LIGHTMAP_OR_SH(lmName, shName, index) float2 lmName : TEXCOORD##index
-    #define OUTPUT_LIGHTMAP_UV(lightmapUV, lightmapScaleOffset, OUT) OUT.xy = lightmapUV.xy * lightmapScaleOffset.xy + lightmapScaleOffset.zw;
-    #define OUTPUT_SH(normalWS, OUT)
+#if defined(LIGHTMAP_ON)   // 使用了光照贴图
+    #define DECLARE_LIGHTMAP_OR_SH(lmName, shName, index) float2 lmName : TEXCOORD##index   // 声明光照贴图的纹理坐标
+    #define OUTPUT_LIGHTMAP_UV(lightmapUV, lightmapScaleOffset, OUT) OUT.xy = lightmapUV.xy * lightmapScaleOffset.xy + lightmapScaleOffset.zw;  // 计算光照贴图的纹理坐标
+    #define OUTPUT_SH(normalWS, OUT) // 空的宏定义
 #else
-    #define DECLARE_LIGHTMAP_OR_SH(lmName, shName, index) half3 shName : TEXCOORD##index
-    #define OUTPUT_LIGHTMAP_UV(lightmapUV, lightmapScaleOffset, OUT)
-    #define OUTPUT_SH(normalWS, OUT) OUT.xyz = SampleSHVertex(normalWS)
+    #define DECLARE_LIGHTMAP_OR_SH(lmName, shName, index) half3 shName : TEXCOORD##index   // 声明球谐光照贴图的纹理坐标
+    #define OUTPUT_LIGHTMAP_UV(lightmapUV, lightmapScaleOffset, OUT)  // 空的宏定义
+    #define OUTPUT_SH(normalWS, OUT) OUT.xyz = SampleSHVertex(normalWS)   // 计算球谐光照
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -118,12 +118,12 @@ half3 VertexLighting(float3 positionWS, half3 normalWS)
 {
     half3 vertexLightColor = half3(0.0, 0.0, 0.0);
 
-#ifdef _ADDITIONAL_LIGHTS_VERTEX
-    uint lightsCount = GetAdditionalLightsCount();
-    LIGHT_LOOP_BEGIN(lightsCount)
+#ifdef _ADDITIONAL_LIGHTS_VERTEX // 开启额外灯光，并且是逐顶点光照
+    uint lightsCount = GetAdditionalLightsCount(); // 添加的灯光数量
+    LIGHT_LOOP_BEGIN(lightsCount)  // for 循环遍历
         Light light = GetAdditionalLight(lightIndex, positionWS);
-        half3 lightColor = light.color * light.distanceAttenuation;
-        vertexLightColor += LightingLambert(lightColor, light.direction, normalWS);
+        half3 lightColor = light.color * light.distanceAttenuation; // 灯光的颜色乘上距离的衰减
+        vertexLightColor += LightingLambert(lightColor, light.direction, normalWS);  // 最后进行累加
     LIGHT_LOOP_END
 #endif
 
@@ -254,6 +254,7 @@ half4 UniversalFragmentPBR(InputData inputData, SurfaceData surfaceData)
     BRDFData brdfData;
 
     // NOTE: can modify "surfaceData"...
+    // 注意：可修改 "surfaceData"...
     InitializeBRDFData(surfaceData, brdfData);
 
     #if defined(DEBUG_DISPLAY)
@@ -270,13 +271,15 @@ half4 UniversalFragmentPBR(InputData inputData, SurfaceData surfaceData)
     half4 shadowMask = CalculateShadowMask(inputData);
     AmbientOcclusionFactor aoFactor = CreateAmbientOcclusionFactor(inputData, surfaceData);
     uint meshRenderingLayers = GetMeshRenderingLayer();
-    Light mainLight = GetMainLight(inputData, shadowMask, aoFactor);
+    Light mainLight = GetMainLight(inputData, shadowMask, aoFactor); // 主光的光照
 
     // NOTE: We don't apply AO to the GI here because it's done in the lighting calculation below...
+    // 注意：我们在这里不对 GI 应用 AO，因为它已在下面的照明计算中完成...
     MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI);
 
     LightingData lightingData = CreateLightingData(inputData, surfaceData);
 
+    // 得到全局光照的Color
     lightingData.giColor = GlobalIllumination(brdfData, brdfDataClearCoat, surfaceData.clearCoatMask,
                                               inputData.bakedGI, aoFactor.indirectAmbientOcclusion, inputData.positionWS,
                                               inputData.normalWS, inputData.viewDirectionWS, inputData.normalizedScreenSpaceUV);
@@ -338,6 +341,7 @@ half4 UniversalFragmentPBR(InputData inputData, SurfaceData surfaceData)
 }
 
 // Deprecated: Use the version which takes "SurfaceData" instead of passing all of these arguments...
+// 已废弃： 使用使用 "SurfaceData "的版本，而不是传递所有这些参数...
 half4 UniversalFragmentPBR(InputData inputData, half3 albedo, half metallic, half3 specular,
     half smoothness, half occlusion, half3 emission, half alpha)
 {

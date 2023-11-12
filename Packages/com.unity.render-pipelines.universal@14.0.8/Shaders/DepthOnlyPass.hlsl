@@ -25,7 +25,7 @@ Varyings DepthOnlyVertex(Attributes input)
 {
     Varyings output = (Varyings)0;
     UNITY_SETUP_INSTANCE_ID(input);
-    UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+    UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);  // VR相关
 
     output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
     output.positionCS = TransformObjectToHClip(input.position.xyz);
@@ -42,6 +42,6 @@ half DepthOnlyFragment(Varyings input) : SV_TARGET
     LODFadeCrossFade(input.positionCS);
 #endif
 
-    return input.positionCS.z;
+    return input.positionCS.z;  // 这里返回深度值z，于URP之前的源码有区别，之前直接返回0
 }
 #endif

@@ -10,8 +10,12 @@
 // Unity is Y up and left handed in world space
 // Caution: When going from world space to view space, unity is right handed in view space and the determinant of the matrix is negative
 // For cubemap capture (reflection probe) view space is still left handed (cubemap convention) and the determinant is positive.
+// 翻译：：Unity 在世界空间坐标系中，Y轴朝上，左手系。
+// 注意：从世界空间变换到观察空间，同时变为右手坐标系，因此变换矩阵的行列式是负的。
+// 对于反射探针获取的CubeMap，观察空间仍然是左手系，因此行列式是正的。
 
 // The lighting code assume that 1 Unity unit (1uu) == 1 meters.  This is very important regarding physically based light unit and inverse square attenuation
+// 翻译：：照明规范假定 1 Unity 单位 (1uu) == 1 米。 这对基于物理的光照单位和反平方衰减非常重要
 
 // space at the end of the variable name
 // WS: world space

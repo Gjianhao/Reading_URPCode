@@ -204,16 +204,19 @@ half AlphaClip(half alpha, half cutoff)
 #endif
 
 // Terminates the current invocation if the input alpha value is below the specified cutoff value and returns an updated alpha value otherwise.
+// 如果输入的阿尔法值低于指定的截止值，则终止当前调用，否则返回更新后的阿尔法值。
 // When provided, the offset value is added to the cutoff value during the comparison logic.
+// 如果提供了偏移值，则在比较逻辑过程中将偏移值添加到截止值中。
 // The return value from this function should be exported as the final alpha value in fragment shaders so it can be combined with the MSAA coverage mask.
 //
 // When _ALPHATEST_ON is defined:     The returned value follows the behavior noted in the AlphaClip function
 // When _ALPHATEST_ON is not defined: The returned value is equal to the original alpha input parameter
 //
 // NOTE: When _ALPHATEST_ON is not defined, this function is effectively a no-op.
+// 注意：未定义 _ALPHATEST_ON 时，该函数实际上不起作用。
 real AlphaDiscard(real alpha, real cutoff, real offset = real(0.0))
 {
-#ifdef _ALPHATEST_ON
+#ifdef _ALPHATEST_ON // 如果材质面板开启了alpha clip开关，
     if (IsAlphaDiscardEnabled())
         alpha = AlphaClip(alpha, cutoff + offset);
 #endif
@@ -299,11 +302,11 @@ float3 NormalizeNormalPerPixel(float3 normalWS)
 
 real ComputeFogFactorZ0ToFar(float z)
 {
-    #if defined(FOG_LINEAR)
+    #if defined(FOG_LINEAR)  // 如果是线性雾
     // factor = (end-z)/(end-start) = z * (-1/(end-start)) + (end/(end-start))
     float fogFactor = saturate(z * unity_FogParams.z + unity_FogParams.w);
     return real(fogFactor);
-    #elif defined(FOG_EXP) || defined(FOG_EXP2)
+    #elif defined(FOG_EXP) || defined(FOG_EXP2)  // 如果是指数雾
     // factor = exp(-(density*z)^2)
     // -density * z computed at vertex
     return real(unity_FogParams.x * z);
@@ -314,7 +317,7 @@ real ComputeFogFactorZ0ToFar(float z)
 
 real ComputeFogFactor(float zPositionCS)
 {
-    float clipZ_0Far = UNITY_Z_0_FAR_FROM_CLIPSPACE(zPositionCS);
+    float clipZ_0Far = UNITY_Z_0_FAR_FROM_CLIPSPACE(zPositionCS); // 处理深度值，针对不同平台重新映射深度值的范围
     return ComputeFogFactorZ0ToFar(clipZ_0Far);
 }
 

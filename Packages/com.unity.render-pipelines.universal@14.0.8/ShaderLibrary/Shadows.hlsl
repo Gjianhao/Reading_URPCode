@@ -100,7 +100,7 @@ CBUFFER_END
     #endif
 #endif
 
-float4 _ShadowBias; // x: depth bias, y: normal bias
+float4 _ShadowBias; // x: depth bias, y: normal bias 在灯光属性那里获得
 
 #define BEYOND_SHADOW_FAR(shadowCoord) shadowCoord.z <= 0.0 || shadowCoord.z >= 1.0
 
@@ -293,15 +293,16 @@ half ComputeCascadeIndex(float3 positionWS)
     return half(4.0) - dot(weights, half4(4, 3, 2, 1));
 }
 
+// 将世界空间位置转为阴影坐标
 float4 TransformWorldToShadowCoord(float3 positionWS)
 {
-#ifdef _MAIN_LIGHT_SHADOWS_CASCADE
-    half cascadeIndex = ComputeCascadeIndex(positionWS);
+#ifdef _MAIN_LIGHT_SHADOWS_CASCADE // 定义了级联阴影
+    half cascadeIndex = ComputeCascadeIndex(positionWS); // 获取当前级联的索引
 #else
     half cascadeIndex = half(0.0);
 #endif
 
-    float4 shadowCoord = mul(_MainLightWorldToShadow[cascadeIndex], float4(positionWS, 1.0));
+    float4 shadowCoord = mul(_MainLightWorldToShadow[cascadeIndex], float4(positionWS, 1.0)); // 通过索引从数组中获取对应的变换矩阵，最后得到阴影坐标
 
     return float4(shadowCoord.xyz, 0);
 }
@@ -442,13 +443,14 @@ float4 GetShadowCoord(VertexPositionInputs vertexInput)
 #endif
 }
 
+// 得到偏斜之后的阴影坐标
 float3 ApplyShadowBias(float3 positionWS, float3 normalWS, float3 lightDirection)
 {
     float invNdotL = 1.0 - saturate(dot(lightDirection, normalWS));
     float scale = invNdotL * _ShadowBias.y;
 
     // normal bias is negative since we want to apply an inset normal offset
-    positionWS = lightDirection * _ShadowBias.xxx + positionWS;
+    positionWS = lightDirection * _ShadowBias.xxx + positionWS;  // _ShadowBias.x表示深度方向偏移  _ShadowBias.y 表示法线方向偏移
     positionWS = normalWS * scale.xxx + positionWS;
     return positionWS;
 }

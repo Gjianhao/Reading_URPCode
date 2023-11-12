@@ -73,6 +73,7 @@ real GetOddNegativeScale()
     // FIXME: We should be able to just return unity_WorldTransformParams.w, but it is not
     // properly set at the moment, when doing ray-tracing; once this has been fixed in cpp,
     // we can revert back to the former implementation.
+    // 修正：我们应该可以直接返回 unity_WorldTransformParams.w，但目前在进行光线追踪时，它并没有被正确设置；一旦在 cpp 中修复了这个问题，就可以恢复到之前的实现。
     return unity_WorldTransformParams.w >= 0.0 ? 1.0 : -1.0;
 }
 

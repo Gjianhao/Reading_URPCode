@@ -36,9 +36,9 @@ half4 frag(Varyings input) : SV_Target
     half4 texColor = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, uv);
     half3 color = texColor.rgb * _BaseColor.rgb;
     half alpha = texColor.a * _BaseColor.a;
-    AlphaDiscard(alpha, _Cutoff);
+    AlphaDiscard(alpha, _Cutoff);  // 透明度裁切
 
-#ifdef _ALPHAPREMULTIPLY_ON
+#ifdef _ALPHAPREMULTIPLY_ON  // 判断材质是否开启透明预乘选项
     color *= alpha;
 #endif
     return half4(color, alpha);

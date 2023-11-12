@@ -26,7 +26,7 @@ struct Varyings
 Varyings UniversalVertexMeta(Attributes input)
 {
     Varyings output = (Varyings)0;
-    output.positionCS = UnityMetaVertexPosition(input.positionOS.xyz, input.uv1, input.uv2);
+    output.positionCS = UnityMetaVertexPosition(input.positionOS.xyz, input.uv1, input.uv2); // 获得齐次裁剪空间顶点位置
     output.uv = TRANSFORM_TEX(input.uv0, _BaseMap);
 #ifdef EDITOR_VISUALIZATION
     UnityEditorVizData(input.positionOS.xyz, input.uv0, input.uv1, input.uv2, output.VizUV, output.LightCoord);

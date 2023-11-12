@@ -103,11 +103,13 @@ namespace UnityEditor.Rendering.Universal.ShaderGUI
 
             /// <summary>
             /// The names for smoothness alpha options available for metallic workflow.
+            /// 金属工作流中可用的平滑度 alpha 选项名称。
             /// </summary>
             public static readonly string[] metallicSmoothnessChannelNames = { "Metallic Alpha", "Albedo Alpha" };
 
             /// <summary>
             /// The names for smoothness alpha options available for specular workflow.
+            /// 高光工作流中可用的平滑度 alpha 选项名称。
             /// </summary>
             public static readonly string[] specularSmoothnessChannelNames = { "Specular Alpha", "Albedo Alpha" };
 

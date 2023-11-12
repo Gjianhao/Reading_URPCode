@@ -78,7 +78,7 @@
 
 ////////////////////////////////////////////////////////
 // basic instancing setups
-// - UNITY_VERTEX_INPUT_INSTANCE_ID     Declare instance ID field in vertex shader input / output struct.
+// - UNITY_VERTEX_INPUT_INSTANCE_ID     Declare instance ID field in vertex shader input / output struct. 在顶点着色器输入/输出结构中声明实例 ID 字段。
 // - UNITY_GET_INSTANCE_ID              (Internal) Get the instance ID from input struct.
 #if UNITY_ANY_INSTANCING_ENABLED
 

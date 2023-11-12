@@ -91,10 +91,10 @@ TEXTURE2D(_ClearCoatMap);       SAMPLER(sampler_ClearCoatMap);  // 清漆贴图
 // 金属和高光采样函数
 half4 SampleMetallicSpecGloss(float2 uv, half albedoAlpha)
 {
-    half4 specGloss;
+    half4 specGloss; 
 
-#ifdef _METALLICSPECGLOSSMAP
-    specGloss = half4(SAMPLE_METALLICSPECULAR(uv));
+#ifdef _METALLICSPECGLOSSMAP // 使用了金属贴图或者高光贴图
+    specGloss = half4(SAMPLE_METALLICSPECULAR(uv));  // 对贴图进行采样
     #ifdef _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
         specGloss.a = albedoAlpha * _Smoothness;
     #else
@@ -102,9 +102,9 @@ half4 SampleMetallicSpecGloss(float2 uv, half albedoAlpha)
     #endif
 #else // _METALLICSPECGLOSSMAP
     #if _SPECULAR_SETUP
-        specGloss.rgb = _SpecColor.rgb;
+        specGloss.rgb = _SpecColor.rgb;  // 启用高光工作流后，使用高光颜色
     #else
-        specGloss.rgb = _Metallic.rrr;
+        specGloss.rgb = _Metallic.rrr;  // 否则就使用金属度
     #endif
 
     #ifdef _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
@@ -117,18 +117,19 @@ half4 SampleMetallicSpecGloss(float2 uv, half albedoAlpha)
     return specGloss;
 }
 
+// 采样遮蔽贴图
 half SampleOcclusion(float2 uv)
 {
     #ifdef _OCCLUSIONMAP
         half occ = SAMPLE_TEXTURE2D(_OcclusionMap, sampler_OcclusionMap, uv).g;
-        return LerpWhiteTo(occ, _OcclusionStrength);
+        return LerpWhiteTo(occ, _OcclusionStrength); // 通过_OcclusionStrength 调节 AO 的强度
     #else
-        return half(1.0);
+        return half(1.0);   // 物体完全收环境光影响
     #endif
 }
 
 
-// Returns clear coat parameters
+// Returns clear coat parameters 返回清漆参数
 // .x/.r == mask
 // .y/.g == smoothness
 half2 SampleClearCoat(float2 uv)
@@ -149,7 +150,7 @@ half2 SampleClearCoat(float2 uv)
 void ApplyPerPixelDisplacement(half3 viewDirTS, inout float2 uv)
 {
 #if defined(_PARALLAXMAP)
-    uv += ParallaxMapping(TEXTURE2D_ARGS(_ParallaxMap, sampler_ParallaxMap), viewDirTS, _Parallax, uv);
+    uv += ParallaxMapping(TEXTURE2D_ARGS(_ParallaxMap, sampler_ParallaxMap), viewDirTS, _Parallax, uv); 
 #endif
 }
 
@@ -226,6 +227,7 @@ inline void InitializeStandardLitSurfaceData(float2 uv, out SurfaceData outSurfa
     outSurfaceData.occlusion = SampleOcclusion(uv);
     outSurfaceData.emission = SampleEmission(uv, _EmissionColor.rgb, TEXTURE2D_ARGS(_EmissionMap, sampler_EmissionMap));
 
+    // 定义清漆，就采样清漆贴图
 #if defined(_CLEARCOAT) || defined(_CLEARCOATMAP)
     half2 clearCoat = SampleClearCoat(uv);
     outSurfaceData.clearCoatMask       = clearCoat.r;

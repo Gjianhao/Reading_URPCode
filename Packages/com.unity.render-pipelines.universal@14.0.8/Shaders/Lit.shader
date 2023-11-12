@@ -122,19 +122,19 @@ Shader "Universal Render Pipeline/Lit"
             // -------------------------------------
             // Material Keywords
             #pragma shader_feature_local _NORMALMAP  // 当添加了法线贴图，就会传入该关键词
-            #pragma shader_feature_local _PARALLAXMAP
+            #pragma shader_feature_local _PARALLAXMAP // 使用视察贴图
             #pragma shader_feature_local _RECEIVE_SHADOWS_OFF  // 当关闭接受阴影，就会传入该关键词
             #pragma shader_feature_local _ _DETAIL_MULX2 _DETAIL_SCALED
             #pragma shader_feature_local_fragment _SURFACE_TYPE_TRANSPARENT
             #pragma shader_feature_local_fragment _ALPHATEST_ON   //  当开启了透明裁切
             #pragma shader_feature_local_fragment _ _ALPHAPREMULTIPLY_ON _ALPHAMODULATE_ON  // 混合模式选择
             #pragma shader_feature_local_fragment _EMISSION   //  当开启自发光
-            #pragma shader_feature_local_fragment _METALLICSPECGLOSSMAP  
-            #pragma shader_feature_local_fragment _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
+            #pragma shader_feature_local_fragment _METALLICSPECGLOSSMAP  // 在金属工作流中使用了金属贴图，或在高光工作流中使用了高光贴图
+            #pragma shader_feature_local_fragment _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A  // 金属或高光工作流中选择 albedo alpha 选项。
             #pragma shader_feature_local_fragment _OCCLUSIONMAP
-            #pragma shader_feature_local_fragment _SPECULARHIGHLIGHTS_OFF
-            #pragma shader_feature_local_fragment _ENVIRONMENTREFLECTIONS_OFF
-            #pragma shader_feature_local_fragment _SPECULAR_SETUP
+            #pragma shader_feature_local_fragment _SPECULARHIGHLIGHTS_OFF  // 关闭高光时
+            #pragma shader_feature_local_fragment _ENVIRONMENTREFLECTIONS_OFF  // 关闭环境光反射
+            #pragma shader_feature_local_fragment _SPECULAR_SETUP   // 开启了高光工作流
 
             // -------------------------------------
             // Universal Pipeline keywords
@@ -170,7 +170,7 @@ Shader "Universal Render Pipeline/Lit"
             #pragma instancing_options renderinglayer
             #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
 
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"  // 为 LitForwardPass 封装了几个方法
             #include "Packages/com.unity.render-pipelines.universal/Shaders/LitForwardPass.hlsl"
             ENDHLSL
         }
@@ -186,9 +186,9 @@ Shader "Universal Render Pipeline/Lit"
 
             // -------------------------------------
             // Render State Commands
-            ZWrite On
-            ZTest LEqual
-            ColorMask 0
+            ZWrite On  // 开启深度写入
+            ZTest LEqual  // 开启深度测试
+            ColorMask 0  // 不输出颜色
             Cull[_Cull]
 
             HLSLPROGRAM
@@ -201,7 +201,7 @@ Shader "Universal Render Pipeline/Lit"
 
             // -------------------------------------
             // Material Keywords
-            #pragma shader_feature_local_fragment _ALPHATEST_ON
+            #pragma shader_feature_local_fragment _ALPHATEST_ON  // 计算阴影贴图只会用到透明度裁切属性，
             #pragma shader_feature_local_fragment _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
 
             //--------------------------------------
@@ -221,7 +221,7 @@ Shader "Universal Render Pipeline/Lit"
 
             // -------------------------------------
             // Includes
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl" // 包含了需要输入的所有数据
             #include "Packages/com.unity.render-pipelines.universal/Shaders/ShadowCasterPass.hlsl"
             ENDHLSL
         }
@@ -318,8 +318,8 @@ Shader "Universal Render Pipeline/Lit"
 
             // -------------------------------------
             // Render State Commands
-            ZWrite On
-            ColorMask R
+            ZWrite On // 打开深度写入
+            ColorMask R  // 输出一个R通道
             Cull[_Cull]
 
             HLSLPROGRAM
@@ -404,6 +404,7 @@ Shader "Universal Render Pipeline/Lit"
 
         // This pass it not used during regular rendering, only for lightmap baking.
         // 该pass在常规渲染中不使用，仅用于光照贴图烘焙。
+        // 主要工作是将材质的Albedo和Emission属性传递给Unity的烘培系统，从而保证物体能够被准确计算出间接照明。只有在烘培lightmap时候，才会执行该pass。
         Pass
         {
             Name "Meta"
@@ -414,7 +415,7 @@ Shader "Universal Render Pipeline/Lit"
 
             // -------------------------------------
             // Render State Commands
-            Cull Off
+            Cull Off  // 关闭剔除，因为烘培时候需要顾及物体的背面
 
             HLSLPROGRAM
             #pragma target 2.0
@@ -443,7 +444,7 @@ Shader "Universal Render Pipeline/Lit"
             ENDHLSL
         }
 
-        // 2D渲染
+        // 2D渲染  不需要进行光照计算
         Pass
         {
             Name "Universal2D"

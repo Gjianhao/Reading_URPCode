@@ -128,6 +128,7 @@ half3 SampleLightmap(float2 staticLightmapUV, half3 normalWS)
 // We either sample GI from baked lightmap or from probes.
 // If lightmap: sampleData.xy = lightmapUV
 // If probe: sampleData.xyz = L2 SH terms
+// 翻译：：我们可以从烘焙光图或探针中提取 GI 样本。
 #if defined(LIGHTMAP_ON) && defined(DYNAMICLIGHTMAP_ON)
 #define SAMPLE_GI(staticLmName, dynamicLmName, shName, normalWSName) SampleLightmap(staticLmName, dynamicLmName, normalWSName)
 #elif defined(DYNAMICLIGHTMAP_ON)

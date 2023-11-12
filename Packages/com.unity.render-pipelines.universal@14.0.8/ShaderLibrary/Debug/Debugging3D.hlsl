@@ -302,6 +302,7 @@ bool CanDebugOverrideOutputColor(inout InputData inputData, inout SurfaceData su
 #else
 
 // When "DEBUG_DISPLAY" isn't defined this macro does nothing - there's no debug-data to set-up...
+// 当没有定义 "DEBUG_DISPLAY "时，这个宏什么也不做 - 没有调试数据可设置...
 #define SETUP_DEBUG_TEXTURE_DATA(inputData, uv, texture)
 
 #endif
