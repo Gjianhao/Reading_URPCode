@@ -2,6 +2,8 @@ Shader "CustomShader"
 {
     Properties
     {
+        [KeywordEnum(Normal,R,G,B)] _CL("Color Select", Float) = 0
+        [ToggleOff] _HH("HH", Int) = 0
     }
     SubShader
     {
@@ -18,6 +20,9 @@ Shader "CustomShader"
             #pragma fragment frag
             #pragma prefer_hlslcc gles  // 让OpenGL ES 2.0 也使用HLSLcc编译器，因为其他版本的图形库默认使用HLSLcc编译器
             #pragma exclude_renderers d3d11_9x  // 由于兼容性问题，排除掉d3d11_9x渲染器
+
+            #pragma shader_feature_local __ _CL_R _CL_G _CL_B
+            #pragma shader_feature _HH_OFF
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
@@ -62,6 +67,24 @@ Shader "CustomShader"
                 float3 V = GetWorldSpaceNormalizeViewDir(i.positionWS.xyz);
                 float3 H = normalize(V + L);
                 float3 N = normalize(i.normalWS);
+
+
+                // 取消勾选时，为黑色
+                #ifdef _HH_OFF
+                    return half4(0,0,0,0);
+                #else
+                    return half4(1,1,1,0);
+                #endif
+                
+                #ifdef _CL_R
+                    return half4(1,0,0,0);
+                #elif _CL_G
+                    return half4(0,1,0,0);
+                #elif _CL_B
+                    return half4(0,0,1,0);
+                #endif
+                
+                
                 
                 return pow(max(dot(N, H), 0), 32);
             }
