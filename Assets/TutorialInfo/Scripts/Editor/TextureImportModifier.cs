@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 
-namespace Editor {
+namespace TutorialInfo.Scripts.Editor {
     public class TextureImportModifier : ScriptableObject
     {
         // 压缩
