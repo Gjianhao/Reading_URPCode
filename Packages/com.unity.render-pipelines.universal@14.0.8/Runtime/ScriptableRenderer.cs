@@ -526,10 +526,12 @@ namespace UnityEngine.Rendering.Universal
         {
             // Executes render passes that are inputs to the main rendering
             // but don't depend on camera state. They all render in monoscopic mode. f.ex, shadow maps.
+            // 执行作为主渲染输入但不依赖于摄像机状态的渲染传递。例如，阴影贴图。
             public static readonly int BeforeRendering = 0;
 
             // Main bulk of render pass execution. They required camera state to be properly set
             // and when enabled they will render in stereo.
+            // 执行渲染传递的主要部分。它们需要正确设置摄像机状态，启用后将以立体方式渲染。
             public static readonly int MainRenderingOpaque = 1;
             public static readonly int MainRenderingTransparent = 2;
 
@@ -747,6 +749,7 @@ namespace UnityEngine.Rendering.Universal
         /// <summary>
         /// Configures the render passes that will execute for this renderer.
         /// This method is called per-camera every frame.
+        /// 翻译：：配置此渲染器将执行的渲染通道。此方法在每一帧中按摄像机调用。
         /// </summary>
         /// <param name="context">Use this render context to issue any draw commands during execution.</param>
         /// <param name="renderingData">Current render state information.</param>

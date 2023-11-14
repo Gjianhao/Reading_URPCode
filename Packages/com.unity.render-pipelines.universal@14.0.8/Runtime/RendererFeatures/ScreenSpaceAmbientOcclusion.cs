@@ -41,8 +41,8 @@ namespace UnityEngine.Rendering.Universal {
         }
 
         internal enum AOMethodOptions {
-            BlueNoise,
-            InterleavedGradient,
+            BlueNoise,     // 蓝噪音
+            InterleavedGradient,   // 交错渐变、梯度
         }
 
         internal enum BlurQualityOptions {
@@ -53,17 +53,17 @@ namespace UnityEngine.Rendering.Universal {
     }
 
     [DisallowMultipleRendererFeature("Screen Space Ambient Occlusion")]
-    [Tooltip("The Ambient Occlusion effect darkens creases, holes, intersections and surfaces that are close to each other.")]
+    [Tooltip("The Ambient Occlusion effect darkens creases, holes, intersections and surfaces that are close to each other.环境遮蔽效果可使折痕、孔洞、交叉点和相互靠近的表面变暗。")]
     [URPHelpURL("post-processing-ssao")]
     internal class ScreenSpaceAmbientOcclusion : ScriptableRendererFeature {
         // Serialized Fields
         [SerializeField] private ScreenSpaceAmbientOcclusionSettings m_Settings = new ScreenSpaceAmbientOcclusionSettings();
 
         [SerializeField] [HideInInspector] [Reload("Textures/BlueNoise256/LDR_LLL1_{0}.png", 0, 7)]
-        internal Texture2D[] m_BlueNoise256Textures;
+        internal Texture2D[] m_BlueNoise256Textures;  // 加载8张噪声图
 
         [SerializeField] [HideInInspector] [Reload("Shaders/Utils/ScreenSpaceAmbientOcclusion.shader")]
-        private Shader m_Shader;
+        private Shader m_Shader;  // 加载shader
 
         // Private Fields
         private Material m_Material;
@@ -192,13 +192,14 @@ namespace UnityEngine.Rendering.Universal {
             private static readonly ShaderPasses[] m_KawasePasses = { ShaderPasses.KawaseBlur };
             private static readonly ShaderPasses[] m_KawaseAfterOpaquePasses = { ShaderPasses.KawaseAfterOpaque };
 
-            // Enums
+            // Enums 模糊算法的类型
             private enum BlurTypes {
-                Bilateral,
-                Gaussian,
-                Kawase,
+                Bilateral,  // 双边模糊
+                Gaussian,   // 高斯模糊
+                Kawase,     // Kawase模糊
             }
 
+            // 对应shader中的Pass
             private enum ShaderPasses {
                 AmbientOcclusion = 0,
 

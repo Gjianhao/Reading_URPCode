@@ -11,6 +11,10 @@
 // As both solutions have their advantages and disadvantages (etc. shader target 2.0 has only 8 interpolators).
 // We need to find out if we can stick to one solution, which we needs testing.
 // So keeping this until I get manaul QA pass.
+// 翻译：：目前，我们支持在顶点着色器和片段着色器中设置 viewDirTS。
+// 两种解决方案各有利弊（例如，shader target 2.0 只有 8 个插值器）。
+// 我们需要找出能否坚持一种解决方案，这需要测试。
+// 所以，在我获得 manaul QA 通行证之前，我一直保留着它。
 #if defined(_PARALLAXMAP) && (SHADER_TARGET >= 30)
 #define REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR
 #endif

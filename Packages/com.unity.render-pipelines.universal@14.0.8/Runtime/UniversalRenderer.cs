@@ -507,12 +507,17 @@ namespace UnityEngine.Rendering.Universal
             return SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLES2 || SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLES3;
         }
 
+        /// <summary>
+        /// 是否是OpenGLES的设备
+        /// </summary>
+        /// <returns></returns>
         bool IsGLDevice()
         {
             return IsGLESDevice() || SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLCore;
         }
 
         /// <inheritdoc />
+        /// 配置此渲染器将执行的渲染通道。此方法在每一帧中按摄像机调用。
         public override void Setup(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             m_ForwardLights.PreSetup(ref renderingData); // 如果是Forward+模式
