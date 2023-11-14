@@ -8,8 +8,8 @@ namespace UnityEditor.Rendering.Universal {
     #region Serialized Properties
 
         private SerializedProperty m_AOMethod;
-        private SerializedProperty m_Downsample;
-        private SerializedProperty m_AfterOpaque;
+        private SerializedProperty m_Downsample; // 降采样
+        private SerializedProperty m_AfterOpaque; // 不透明之后
         private SerializedProperty m_Source;
         private SerializedProperty m_NormalQuality;
         private SerializedProperty m_Intensity;
@@ -46,10 +46,10 @@ namespace UnityEditor.Rendering.Universal {
 
         // Structs
         private struct Styles {
-            public static GUIContent AOMethod = EditorGUIUtility.TrTextContent("Method", "The noise method to use when calculating the Ambient Occlusion value.");
-            public static GUIContent Intensity = EditorGUIUtility.TrTextContent("Intensity", "The degree of darkness that Ambient Occlusion adds.");
-            public static GUIContent Radius = EditorGUIUtility.TrTextContent("Radius", "The radius around a given point, where Unity calculates and applies the effect.");
-            public static GUIContent Falloff = EditorGUIUtility.TrTextContent("Falloff Distance", "The distance from the camera where Ambient Occlusion should be visible.");
+            public static GUIContent AOMethod = EditorGUIUtility.TrTextContent("Method", "The noise method to use when calculating the Ambient Occlusion value.计算 AO 值时使用的噪音方法。");
+            public static GUIContent Intensity = EditorGUIUtility.TrTextContent("Intensity", "The degree of darkness that Ambient Occlusion adds. AO 强度（增加的黑暗程度。）");
+            public static GUIContent Radius = EditorGUIUtility.TrTextContent("Radius", "The radius around a given point, where Unity calculates and applies the effect. 指定点周围的半径，Unity 在此计算并应用效果。");
+            public static GUIContent Falloff = EditorGUIUtility.TrTextContent("Falloff Distance", "The distance from the camera where Ambient Occlusion should be visible. AO应该可见的距相机的距离");
 
             public static GUIContent DirectLightingStrength =
                 EditorGUIUtility.TrTextContent("Direct Lighting Strength", "Controls how much the ambient occlusion affects direct lighting.");
@@ -144,6 +144,7 @@ namespace UnityEditor.Rendering.Universal {
                 return false;
 
             // We have to find the renderer related to the SSAO feature, then test if it is in deferred mode.
+            // 我们必须找到与 SSAO 功能相关的渲染器，然后测试它是否处于延迟模式。
             var rendererDataList = pipelineAsset.m_RendererDataList;
             for (int rendererIndex = 0; rendererIndex < rendererDataList.Length; ++rendererIndex) {
                 ScriptableRendererData rendererData = (ScriptableRendererData)rendererDataList[rendererIndex];

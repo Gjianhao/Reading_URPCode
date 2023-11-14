@@ -659,6 +659,8 @@ namespace UnityEngine.Rendering.Universal
         /// by this render
         /// pass that need to be cleanup once camera has finished rendering.
         /// This method be called for all cameras in a camera stack.
+        /// 在完成渲染摄像机时调用。你可以使用此回调释放此渲染传递创建的任何资源，这些资源需要在摄像机完成渲染后进行清理。
+        /// 相机堆栈中的所有相机都会调用此方法。
         /// </summary>
         /// <param name="cmd">Use this CommandBuffer to cleanup any generated data</param>
         public virtual void OnCameraCleanup(CommandBuffer cmd)

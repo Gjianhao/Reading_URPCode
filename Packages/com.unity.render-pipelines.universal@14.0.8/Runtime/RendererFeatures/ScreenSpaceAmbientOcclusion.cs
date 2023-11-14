@@ -83,11 +83,12 @@ namespace UnityEngine.Rendering.Universal {
         internal const string k_SampleCountHighKeyword = "_SAMPLE_COUNT_HIGH";
 
         /// <inheritdoc/>
+        /// 初始化此功能的资源。每次序列化时都会调用该函数。
         public override void Create() {
         #if UNITY_EDITOR
             ResourceReloader.TryReloadAllNullIn(this, UniversalRenderPipelineAsset.packagePath);
         #endif
-            // Create the pass...
+            // Create the pass... 创建pass
             if (m_SSAOPass == null)
                 m_SSAOPass = new ScreenSpaceAmbientOcclusionPass();
 
@@ -107,12 +108,14 @@ namespace UnityEngine.Rendering.Universal {
         }
 
         /// <inheritdoc/>
+        /// 在渲染器中注入一个或多个 ScriptableRenderPass。
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData) {
             if (!GetMaterials()) {
                 Debug.LogErrorFormat("{0}.AddRenderPasses(): Missing material. {1} render pass will not be added.", GetType().Name, name);
-                return;
+                return; // 材质为空，就结束
             }
 
+            // 设置ssao Pass
             bool shouldAdd = m_SSAOPass.Setup(ref m_Settings, ref renderer, ref m_Material, ref m_BlueNoise256Textures);
             if (shouldAdd)
                 renderer.EnqueuePass(m_SSAOPass);
@@ -228,7 +231,7 @@ namespace UnityEngine.Rendering.Universal {
 
                 // RenderPass Event + Source Settings (Depth / Depth&Normals
                 if (isRendererDeferred) {
-                    renderPassEvent = m_CurrentSettings.AfterOpaque ? RenderPassEvent.AfterRenderingOpaques : RenderPassEvent.AfterRenderingGbuffer; // 是否是不透明物体之前渲染
+                    renderPassEvent = m_CurrentSettings.AfterOpaque ? RenderPassEvent.AfterRenderingOpaques : RenderPassEvent.AfterRenderingGbuffer; // 是否是不透明物体之后渲染
                     m_CurrentSettings.Source = ScreenSpaceAmbientOcclusionSettings.DepthSource.DepthNormals;
                 }
                 else {
@@ -237,6 +240,7 @@ namespace UnityEngine.Rendering.Universal {
                     // then we rely on a depth resolve taking place after the PrePasses in order to have it ready for SSAO.
                     // 那么我们就需要在预演之后进行深度解析，以便为 SSAO 做好准备。
                     // Hence we set the event to RenderPassEvent.AfterRenderingPrePasses + 1 at the earliest.
+                    // 因此，我们最早将事件设置为 RenderPassEvent.AfterRenderingPrePasses + 1。
                     renderPassEvent = m_CurrentSettings.AfterOpaque ? RenderPassEvent.AfterRenderingOpaques : RenderPassEvent.AfterRenderingPrePasses + 1;
                 }
 

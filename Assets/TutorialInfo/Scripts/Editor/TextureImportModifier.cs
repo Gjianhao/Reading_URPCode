@@ -5,7 +5,7 @@ namespace TutorialInfo.Scripts.Editor {
     public class TextureImportModifier : ScriptableObject
     {
         // 压缩
-        [MenuItem ("TextureImportModifier/一键设置纹理")]  // 不压缩纹理。
+        [MenuItem ("Texture Import Tool/一键设置纹理参数")]  // 不压缩纹理。
         static void ChangeTextureState() {
             Object[] textures = GetSelectedTextures(); 
             Selection.objects = new Object[0];
@@ -50,9 +50,8 @@ namespace TutorialInfo.Scripts.Editor {
 
                 platformSettings.name = "Android";
                 platformSettings.format = TextureImporterFormat.ASTC_6x6;
-                platformSettings.compressionQuality = 100;
+                platformSettings.compressionQuality = 100;  // Best
                 textureImporter.SetPlatformTextureSettings(platformSettings);  
-                textureImporter.textureCompression = TextureImporterCompression.CompressedHQ;
                 AssetDatabase.ImportAsset(path);
             }
         }
