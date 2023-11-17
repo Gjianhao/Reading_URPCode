@@ -410,6 +410,7 @@ float3 MixFog(float3 fragColor, float fogFactor)
 }
 
 // Linear depth buffer value between [0, 1] or [1, 0] to eye depth value between [near, far]
+// [0,1]或[1,0]之间的线性深度缓冲值与[近，远]之间的眼睛深度值
 half LinearDepthToEyeDepth(half rawDepth)
 {
     #if UNITY_REVERSED_Z

@@ -26,12 +26,12 @@ Shader "Hidden/Universal Render Pipeline/ScreenSpaceAmbientOcclusion" {
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment SSAO
-            #pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
-            #pragma multi_compile_local_fragment _INTERLEAVED_GRADIENT _BLUE_NOISE
-            #pragma multi_compile_local_fragment _SOURCE_DEPTH_LOW _SOURCE_DEPTH_MEDIUM _SOURCE_DEPTH_HIGH _SOURCE_DEPTH_NORMALS
-            #pragma multi_compile_local_fragment _ _ORTHOGRAPHIC
-            #pragma multi_compile_local_fragment _SAMPLE_COUNT_LOW _SAMPLE_COUNT_MEDIUM _SAMPLE_COUNT_HIGH
-            #pragma multi_compile_fragment _ _FOVEATED_RENDERING_NON_UNIFORM_RASTER
+            #pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT  // 延迟渲染时，在GBUFFER中得到精确的法线
+            #pragma multi_compile_local_fragment _INTERLEAVED_GRADIENT _BLUE_NOISE // 交错的梯度图 、蓝噪声图
+            #pragma multi_compile_local_fragment _SOURCE_DEPTH_LOW _SOURCE_DEPTH_MEDIUM _SOURCE_DEPTH_HIGH _SOURCE_DEPTH_NORMALS  // 计算法线时深度纹理采样的数量为1、5、9，或者 Depth Normal prepass
+            #pragma multi_compile_local_fragment _ _ORTHOGRAPHIC // 是否是正交
+            #pragma multi_compile_local_fragment _SAMPLE_COUNT_LOW _SAMPLE_COUNT_MEDIUM _SAMPLE_COUNT_HIGH  // 计算模糊值时所采集的样本数4、8、12
+            #pragma multi_compile_fragment _ _FOVEATED_RENDERING_NON_UNIFORM_RASTER // 用于 "视网膜渲染 "的关键字。
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/SSAO.hlsl"
             ENDHLSL

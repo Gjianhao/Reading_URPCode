@@ -71,16 +71,16 @@ namespace UnityEngine.Rendering.Universal {
 
         // Internal / Constants
         internal ref ScreenSpaceAmbientOcclusionSettings settings => ref m_Settings;
-        internal const string k_AOInterleavedGradientKeyword = "_INTERLEAVED_GRADIENT";
-        internal const string k_AOBlueNoiseKeyword = "_BLUE_NOISE";
-        internal const string k_OrthographicCameraKeyword = "_ORTHOGRAPHIC";
-        internal const string k_SourceDepthLowKeyword = "_SOURCE_DEPTH_LOW";
-        internal const string k_SourceDepthMediumKeyword = "_SOURCE_DEPTH_MEDIUM";
-        internal const string k_SourceDepthHighKeyword = "_SOURCE_DEPTH_HIGH";
-        internal const string k_SourceDepthNormalsKeyword = "_SOURCE_DEPTH_NORMALS";
-        internal const string k_SampleCountLowKeyword = "_SAMPLE_COUNT_LOW";
-        internal const string k_SampleCountMediumKeyword = "_SAMPLE_COUNT_MEDIUM";
-        internal const string k_SampleCountHighKeyword = "_SAMPLE_COUNT_HIGH";
+        internal const string k_AOInterleavedGradientKeyword = "_INTERLEAVED_GRADIENT"; // 交错梯度图
+        internal const string k_AOBlueNoiseKeyword = "_BLUE_NOISE"; // 蓝噪声图
+        internal const string k_OrthographicCameraKeyword = "_ORTHOGRAPHIC"; // 是否是正交相机
+        internal const string k_SourceDepthLowKeyword = "_SOURCE_DEPTH_LOW"; // 计算法线时深度纹理采样的数量为1
+        internal const string k_SourceDepthMediumKeyword = "_SOURCE_DEPTH_MEDIUM"; // 计算法线时深度纹理采样的数量为5
+        internal const string k_SourceDepthHighKeyword = "_SOURCE_DEPTH_HIGH"; // 计算法线时深度纹理采样的数量为9
+        internal const string k_SourceDepthNormalsKeyword = "_SOURCE_DEPTH_NORMALS";  // 使用在Depth Normal prepass生成的值
+        internal const string k_SampleCountLowKeyword = "_SAMPLE_COUNT_LOW"; // 计算模糊值时所采集的样本数4
+        internal const string k_SampleCountMediumKeyword = "_SAMPLE_COUNT_MEDIUM"; // 计算模糊值时所采集的样本数8
+        internal const string k_SampleCountHighKeyword = "_SAMPLE_COUNT_HIGH"; // 计算模糊值时所采集的样本数12
 
         /// <inheritdoc/>
         /// 初始化此功能的资源。每次序列化时都会调用该函数。
@@ -230,16 +230,18 @@ namespace UnityEngine.Rendering.Universal {
                 m_CurrentSettings = featureSettings;
 
                 // RenderPass Event + Source Settings (Depth / Depth&Normals
+                // 是否是延迟渲染
                 if (isRendererDeferred) {
-                    renderPassEvent = m_CurrentSettings.AfterOpaque ? RenderPassEvent.AfterRenderingOpaques : RenderPassEvent.AfterRenderingGbuffer; // 是否是不透明物体之后渲染
+                    // 启用此 AfterOpaque 选项后，Unity在不透明通道后计算并应用SSAO，以提高基于平铺式GPU架构的移动平台上的性能。这在物理上是不对的。
+                    renderPassEvent = m_CurrentSettings.AfterOpaque ? RenderPassEvent.AfterRenderingOpaques : RenderPassEvent.AfterRenderingGbuffer; 
                     m_CurrentSettings.Source = ScreenSpaceAmbientOcclusionSettings.DepthSource.DepthNormals;
                 }
                 else {
                     // Rendering after PrePasses is usually correct except when depth priming is in play: 
-                    // 预处理后的渲染通常都是正确的，除非是在深度打底的情况下：
                     // then we rely on a depth resolve taking place after the PrePasses in order to have it ready for SSAO.
-                    // 那么我们就需要在预演之后进行深度解析，以便为 SSAO 做好准备。
                     // Hence we set the event to RenderPassEvent.AfterRenderingPrePasses + 1 at the earliest.
+                    // 翻译：预处理后的渲染通常都是正确的，除非是在深度打底的情况下：
+                    // 那么我们就需要在预演之后进行深度解析，以便为 SSAO 做好准备。
                     // 因此，我们最早将事件设置为 RenderPassEvent.AfterRenderingPrePasses + 1。
                     renderPassEvent = m_CurrentSettings.AfterOpaque ? RenderPassEvent.AfterRenderingOpaques : RenderPassEvent.AfterRenderingPrePasses + 1;
                 }
@@ -256,7 +258,7 @@ namespace UnityEngine.Rendering.Universal {
                         throw new ArgumentOutOfRangeException();
                 }
 
-                // Blur settings
+                // Blur settings 
                 switch (m_CurrentSettings.BlurQuality) {
                     case ScreenSpaceAmbientOcclusionSettings.BlurQualityOptions.High:
                         m_BlurType = BlurTypes.Bilateral;
@@ -295,9 +297,9 @@ namespace UnityEngine.Rendering.Universal {
 
                     // camera view space without translation, used by SSAO.hlsl ReconstructViewPos() to calculate view vector.
                     Matrix4x4 cview = view;
-                    cview.SetColumn(3, new Vector4(0.0f, 0.0f, 0.0f, 1.0f));
+                    cview.SetColumn(3, new Vector4(0.0f, 0.0f, 0.0f, 1.0f)); // 修改观察矩阵第四列
                     Matrix4x4 cviewProj = proj * cview;
-                    Matrix4x4 cviewProjInv = cviewProj.inverse;
+                    Matrix4x4 cviewProjInv = cviewProj.inverse; // VP矩阵的逆矩阵
 
                     Vector4 topLeftCorner = cviewProjInv.MultiplyPoint(new Vector4(-1, 1, -1, 1));
                     Vector4 topRightCorner = cviewProjInv.MultiplyPoint(new Vector4(1, 1, -1, 1));

@@ -119,6 +119,7 @@ static const half kGeometryCoeff = half(0.8);
 // self-shadowing noise, and Epsilon is used to prevent calculation underflow. See the paper
 // (Morgan 2011 https://casual-effects.com/research/McGuire2011AlchemyAO/index.html)
 // for further details of these constants.
+// 下面的常量用于AO估计器。Beta主要用于抑制自阴影噪声，Epsilon用于防止计算下溢。有关这些常数的更多细节，请参阅论文。
 static const half kBeta = half(0.004);
 static const half kEpsilon = half(0.0001);
 
@@ -222,10 +223,11 @@ float SampleDepth(float2 uv)
 
 float GetLinearEyeDepth(float rawDepth)
 {
+    // 如果是正交矩阵
     #if defined(_ORTHOGRAPHIC)
     return LinearDepthToEyeDepth(rawDepth);
     #else
-    return LinearEyeDepth(rawDepth, _ZBufferParams);
+    return LinearEyeDepth(rawDepth, _ZBufferParams); // 投影矩阵
     #endif
 }
 
@@ -351,6 +353,7 @@ half3 SampleNormal(float2 uv, float linearDepth, float2 pixelDensity)
 // Distance-based AO estimator based on Morgan 2011
 // "Alchemy screen-space ambient obscurance algorithm"
 // http://graphics.cs.williams.edu/papers/AlchemyHPG11/
+// 基于摩根 2011 年的基于距离的 AO 估算器
 half4 SSAO(Varyings input) : SV_Target
 {
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
@@ -358,7 +361,7 @@ half4 SSAO(Varyings input) : SV_Target
     // Early Out for Sky...
     float rawDepth_o = SampleDepth(uv); // 采样深度值
     if (rawDepth_o < SKY_DEPTH_VALUE) 
-        return PackAONormal(HALF_ZERO, HALF_ZERO); // 深度趋于0的时候，解包AO的法线为0
+        return PackAONormal(HALF_ZERO, HALF_ZERO); // 深度趋于0的时候，解包AO的法线为0，值为half4(0, 0.5)
 
     // Early Out for Falloff
     float linearDepth_o = GetLinearEyeDepth(rawDepth_o); // 转换为线性深度值

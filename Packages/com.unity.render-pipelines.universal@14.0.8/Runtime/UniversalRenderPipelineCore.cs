@@ -1154,6 +1154,7 @@ namespace UnityEngine.Rendering.Universal
         public const string _DEFERRED_MAIN_LIGHT = "_DEFERRED_MAIN_LIGHT";
 
         /// <summary> Keyword used for Accurate G-buffer normals when rendering with the Deferred rendering path. </summary>
+        /// 在延迟渲染时，使用精确的G-buffer 法线的关键字
         public const string _GBUFFER_NORMALS_OCT = "_GBUFFER_NORMALS_OCT";
 
         /// <summary> Keyword used for Mixed Lighting when rendering with the Deferred rendering path. </summary>
@@ -1238,6 +1239,7 @@ namespace UnityEngine.Rendering.Universal
         public const string DOWNSAMPLING_SIZE_16 = "DOWNSAMPLING_SIZE_16";
 
         /// <summary> Keyword used for foveated rendering. </summary>
+        /// 用于 "视网膜渲染 "的关键字。
         public const string FoveatedRenderingNonUniformRaster = "_FOVEATED_RENDERING_NON_UNIFORM_RASTER";
 
         /// <summary> Keyword used for mixed Spherical Harmonic (SH) evaluation in URP Lit shaders.</summary>
