@@ -1,9 +1,58 @@
+using System;
 using UnityEngine;
 using UnityEditor;
+using UnityEditor.AssetImporters;
+using Object = UnityEngine.Object;
 
 namespace TutorialInfo.Scripts.Editor {
-    public class TextureImportModifier : ScriptableObject
+    public class TextureImportModifier : AssetPostprocessor
     {
+        private void OnPreprocessTexture() {
+            var textureImporter = (TextureImporter)assetImporter;
+            
+            string path = textureImporter.assetPath;
+            string p = assetPath;
+            AssetImportContext con =  context;
+            Debug.Log("path:" + path);
+            Debug.Log("p:" + p);
+            if (path.StartsWith("Assets/ExampleAssets/Textures/123")) {
+                string texName = path.Split('.')[0];
+                // Debug.Log("texName:" + texName);
+                TextureImporterPlatformSettings platformSettings = textureImporter.GetPlatformTextureSettings("Android");
+                if (texName.EndsWith("Tex_A")) {
+                    textureImporter.textureType = TextureImporterType.Default;
+                    textureImporter.sRGBTexture = true;
+                }
+                else if (texName.EndsWith("Tex_N")) {
+                    textureImporter.textureType = TextureImporterType.NormalMap;
+                    textureImporter.sRGBTexture = false;
+                }
+                else {
+                    textureImporter.textureType = TextureImporterType.Default;
+                    textureImporter.sRGBTexture = false;
+                }
+        
+                textureImporter.isReadable = false;
+                textureImporter.mipmapEnabled = true; // 默认设置为true
+                if (textureImporter.mipmapEnabled) {
+                    textureImporter.streamingMipmaps = true;
+                }
+
+                textureImporter.anisoLevel = 0;
+        
+                platformSettings.name = "Android";
+                platformSettings.overridden = true;
+                platformSettings.maxTextureSize = 512;
+                platformSettings.format = TextureImporterFormat.ASTC_6x6;
+                platformSettings.compressionQuality = 100; // Best
+                textureImporter.SetPlatformTextureSettings(platformSettings);
+            }
+        }
+
+        
+        // -------------------------------------------------------------------
+        
+        
         // 压缩
         [MenuItem ("Texture Import Tool/一键设置纹理参数")]  // 不压缩纹理。
         static void ChangeTextureState() {
@@ -26,16 +75,21 @@ namespace TutorialInfo.Scripts.Editor {
 
                 TextureImporter textureImporter = AssetImporter.GetAtPath(path) as TextureImporter;
                 TextureImporterPlatformSettings platformSettings = textureImporter.GetPlatformTextureSettings("Android");
-                if (textureTypeName.Equals("A")) {
+                if (textureTypeName.ToUpper().Equals("A")) {
                     textureImporter.textureType = TextureImporterType.Default;
                     textureImporter.sRGBTexture = true;
                     platformSettings.maxTextureSize = 512;
                 } 
-                else if (textureTypeName.Equals("N")) {
+                else if (textureTypeName.ToUpper().Equals("N")) {
                     textureImporter.textureType = TextureImporterType.NormalMap;
                     textureImporter.sRGBTexture = false;
                     platformSettings.maxTextureSize = 256;
                 } 
+                else if (textureTypeName.ToUpper().Equals("MRA") || textureTypeName.ToUpper().Equals("n")) {
+                    textureImporter.textureType = TextureImporterType.NormalMap;
+                    textureImporter.sRGBTexture = false;
+                    platformSettings.maxTextureSize = 256;
+                }
                 else {
                     textureImporter.textureType = TextureImporterType.Default;
                     textureImporter.sRGBTexture = false;

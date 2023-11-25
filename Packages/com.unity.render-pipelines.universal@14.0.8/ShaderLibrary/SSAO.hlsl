@@ -32,7 +32,7 @@ float4 _CameraViewZExtent[2];
 #define INTENSITY _SSAOParams.x
 #define RADIUS _SSAOParams.y
 #define DOWNSAMPLE _SSAOParams.z
-#define FALLOFF _SSAOParams.w
+#define FALLOFF _SSAOParams.w // fallOff从相机看，AO的可视距离
 
 #if defined(_BLUE_NOISE)
 half4 _SSAOBlueNoiseParams;
@@ -187,8 +187,10 @@ half GetRandomVal(half u, half sampleIndex)
 }
 
 // Sample point picker
+// 获取半球上随机一点，参数：uv，循环次数
 half3 PickSamplePoint(float2 uv, int sampleIndex, half sampleIndexHalf, half rcpSampleCount, half3 normal_o, float2 pixelDensity)
 {
+    // 两种方法：采样噪声图和交错梯度
     #if defined(_BLUE_NOISE)
         const half lerpVal = sampleIndexHalf * rcpSampleCount;
         const half noise = SAMPLE_BLUE_NOISE(((uv + BlueNoiseOffset) * BlueNoiseScale) + lerpVal);
@@ -207,11 +209,11 @@ half3 PickSamplePoint(float2 uv, int sampleIndex, half sampleIndexHalf, half rcp
     const half u2 = half(sqrt(HALF_ONE - u * u));
 
     half3 v = half3(u2 * cos(theta), u2 * sin(theta), u);
-    v *= sqrt((sampleIndexHalf + HALF_ONE) * rcpSampleCount);
-    v = faceforward(v, -normal_o, v);
+    v *= sqrt((sampleIndexHalf + HALF_ONE) * rcpSampleCount);  // // 随着采样次数越向外采样
+    v = faceforward(v, -normal_o, v); // https://thebookofshaders.com/glossary/?search=faceforward  确保v跟normal一个方向
     #endif
 
-    v *= RADIUS;
+    v *= RADIUS;  // 缩放到[0, RADIUS]
     v.xy *= pixelDensity;
     return v;
 }
@@ -238,16 +240,17 @@ float SampleAndGetLinearEyeDepth(float2 uv)
 }
 
 // This returns a vector in world unit (not a position), from camera to the given point described by uv screen coordinate and depth (in absolute world unit).
+// 重建世界空间下的观察位置坐标
 half3 ReconstructViewPos(float2 uv, float linearDepth)
 {
     #if defined(_FOVEATED_RENDERING_NON_UNIFORM_RASTER)
-        uv = RemapFoveatedRenderingDistort(uv);
+        uv = RemapFoveatedRenderingDistort(uv); // 如果事视网膜屏，就是这个uv
     #endif
 
-    // Screen is y-inverted.
+    // Screen is y-inverted. 反转y轴
     uv.y = 1.0 - uv.y;
 
-    // view pos in world space
+    // view pos in world space 世界空间下的观察位置坐标
     #if defined(_ORTHOGRAPHIC)
         float zScale = linearDepth * _ProjectionParams.w; // divide by far plane
         float3 viewPos = _CameraViewTopLeftCorner[unity_eyeIndex].xyz
@@ -255,10 +258,8 @@ half3 ReconstructViewPos(float2 uv, float linearDepth)
                             + _CameraViewYExtent[unity_eyeIndex].xyz * uv.y
                             + _CameraViewZExtent[unity_eyeIndex].xyz * zScale;
     #else
-    float zScale = linearDepth * _ProjectionParams2.x; // divide by near plane
-    float3 viewPos = _CameraViewTopLeftCorner[unity_eyeIndex].xyz
-        + _CameraViewXExtent[unity_eyeIndex].xyz * uv.x
-        + _CameraViewYExtent[unity_eyeIndex].xyz * uv.y;
+    float zScale = linearDepth * _ProjectionParams2.x; // divide by near plane , 因为_ProjectionParams2.x是相机近平面的倒数
+    float3 viewPos = _CameraViewTopLeftCorner[unity_eyeIndex].xyz + _CameraViewXExtent[unity_eyeIndex].xyz * uv.x + _CameraViewYExtent[unity_eyeIndex].xyz * uv.y;
     viewPos *= zScale;
     #endif
 
@@ -266,6 +267,7 @@ half3 ReconstructViewPos(float2 uv, float linearDepth)
 }
 
 // Try reconstructing normal accurately from depth buffer.
+// 尝试从深度缓冲区精确地重建法线。
 // Low:    DDX/DDY on the current pixel
 // Medium: 3 taps on each direction | x | * | y |
 // High:   5 taps on each direction: | z | x | * | y | w |
@@ -340,13 +342,14 @@ half3 ReconstructNormal(float2 uv, float linearDepth, float3 vpos, float2 pixelD
     #endif
 }
 
+// 根据关键字来决定，获取法线的方式
 half3 SampleNormal(float2 uv, float linearDepth, float2 pixelDensity)
 {
     #if defined(_SOURCE_DEPTH_NORMALS)
-        return half3(SampleSceneNormals(uv));
+        return half3(SampleSceneNormals(uv)); // 采样法线
     #else
     float3 vpos = ReconstructViewPos(uv, linearDepth);
-    return ReconstructNormal(uv, linearDepth, vpos, pixelDensity);
+    return ReconstructNormal(uv, linearDepth, vpos, pixelDensity); // 使用深度重建法线值
     #endif
 }
 
@@ -367,31 +370,31 @@ half4 SSAO(Varyings input) : SV_Target
     float linearDepth_o = GetLinearEyeDepth(rawDepth_o); // 转换为线性深度值
     half halfLinearDepth_o = half(linearDepth_o);
     if (halfLinearDepth_o > FALLOFF)
-        return PackAONormal(HALF_ZERO, HALF_ZERO);
+        return PackAONormal(HALF_ZERO, HALF_ZERO); // half4(0, 0.5)
 
-    #if defined(_FOVEATED_RENDERING_NON_UNIFORM_RASTER)
+    #if defined(_FOVEATED_RENDERING_NON_UNIFORM_RASTER) // 视网膜渲染
         float2 pixelDensity = RemapFoveatedRenderingDensity(RemapFoveatedRenderingDistort(uv));
     #else
-    float2 pixelDensity = float2(1.0f, 1.0f);
+    float2 pixelDensity = float2(1.0f, 1.0f);  // 得到像素密度
     #endif
 
-    // Normal for this fragment
+    // Normal for this fragment 采样法线
     half3 normal_o = SampleNormal(uv, linearDepth_o, pixelDensity);
 
-    // View position for this fragment
+    // View position for this fragment  重建观察坐标
     float3 vpos_o = ReconstructViewPos(uv, linearDepth_o);
 
-    // Parameters used in coordinate conversion
+    // Parameters used in coordinate conversion 坐标转换时用到的参数
     half3 camTransform000102 = half3(_CameraViewProjections[unity_eyeIndex]._m00, _CameraViewProjections[unity_eyeIndex]._m01, _CameraViewProjections[unity_eyeIndex]._m02);
     half3 camTransform101112 = half3(_CameraViewProjections[unity_eyeIndex]._m10, _CameraViewProjections[unity_eyeIndex]._m11, _CameraViewProjections[unity_eyeIndex]._m12);
 
-    const half rcpSampleCount = half(rcp(SAMPLE_COUNT));
-    half ao = HALF_ZERO;
-    half sHalf = HALF_MINUS_ONE;
+    const half rcpSampleCount = half(rcp(SAMPLE_COUNT)); // 采样次数的倒数
+    half ao = HALF_ZERO; // 初始为0
+    half sHalf = HALF_MINUS_ONE; // 初始为-1
     UNITY_UNROLL
     for (int s = 0; s < SAMPLE_COUNT; s++)
     {
-        sHalf += HALF_ONE;
+        sHalf += HALF_ONE; // 循环一次增加一个1
 
         // Sample point
         half3 v_s1 = PickSamplePoint(uv, s, sHalf, rcpSampleCount, normal_o, pixelDensity);
@@ -407,7 +410,7 @@ half4 SSAO(Varyings input) : SV_Target
             half2 uv_s1_01 = saturate((spos_s1 + HALF_ONE) * HALF_HALF);
         #else
         zDist = half(-dot(UNITY_MATRIX_V[2].xyz, vpos_s1));
-        half2 uv_s1_01 = saturate(half2(spos_s1 * rcp(zDist) + HALF_ONE) * HALF_HALF);
+        half2 uv_s1_01 = saturate(half2(spos_s1 * rcp(zDist) + HALF_ONE) * HALF_HALF); // rcp 是倒数函数
         #endif
 
         #if defined(_FOVEATED_RENDERING_NON_UNIFORM_RASTER)
@@ -415,18 +418,22 @@ half4 SSAO(Varyings input) : SV_Target
         #endif
 
         // Relative depth of the sample point
+        // 样本点的相对深度
         float rawDepth_s = SampleDepth(uv_s1_01);
         float linearDepth_s = GetLinearEyeDepth(rawDepth_s);
 
         // We need to make sure we not use the AO value if the sample point it's outside the radius or if it's the sky...
+        // 如果采样点在半径之外，或者是天空，我们需要确保不要使用AO值。
         half halfLinearDepth_s = half(linearDepth_s);
         half isInsideRadius = abs(zDist - halfLinearDepth_s) < RADIUS ? 1.0 : 0.0;
         isInsideRadius *= rawDepth_s > SKY_DEPTH_VALUE ? 1.0 : 0.0;
 
         // Relative postition of the sample point
+        // 样本点的相对位置
         half3 v_s2 = half3(ReconstructViewPos(uv_s1_01, linearDepth_s) - vpos_o);
 
         // Estimate the obscurance value
+        // 估计模糊值
         half dotVal = dot(v_s2, normal_o) - kBeta * halfLinearDepth_o;
         half a1 = max(dotVal, HALF_ZERO);
         half a2 = dot(v_s2, v_s2) + kEpsilon;

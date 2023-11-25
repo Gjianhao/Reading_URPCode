@@ -381,7 +381,7 @@ namespace UnityEngine.Rendering.Universal {
 
                 // Set the source keywords...
                 if (m_CurrentSettings.Source == ScreenSpaceAmbientOcclusionSettings.DepthSource.Depth) {
-                    CoreUtils.SetKeyword(m_Material, k_SourceDepthNormalsKeyword, false);
+                    CoreUtils.SetKeyword(m_Material, k_SourceDepthNormalsKeyword, false); // source选择的是depth，这个关键字为false
                     switch (m_CurrentSettings.NormalSamples) {
                         case ScreenSpaceAmbientOcclusionSettings.NormalQuality.Low:
                             CoreUtils.SetKeyword(m_Material, k_SourceDepthLowKeyword, true);
@@ -406,7 +406,7 @@ namespace UnityEngine.Rendering.Universal {
                     CoreUtils.SetKeyword(m_Material, k_SourceDepthLowKeyword, false);
                     CoreUtils.SetKeyword(m_Material, k_SourceDepthMediumKeyword, false);
                     CoreUtils.SetKeyword(m_Material, k_SourceDepthHighKeyword, false);
-                    CoreUtils.SetKeyword(m_Material, k_SourceDepthNormalsKeyword, true);
+                    CoreUtils.SetKeyword(m_Material, k_SourceDepthNormalsKeyword, true); // source选择的是Depth Normals，这个关键字为true
                 }
 
                 // Set up the descriptors
