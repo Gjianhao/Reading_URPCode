@@ -35,9 +35,9 @@ float4 _CameraViewZExtent[2];
 #define FALLOFF _SSAOParams.w // fallOff从相机看，AO的可视距离
 
 #if defined(_BLUE_NOISE)
-half4 _SSAOBlueNoiseParams;
-#define BlueNoiseScale          _SSAOBlueNoiseParams.xy
-#define BlueNoiseOffset         _SSAOBlueNoiseParams.zw
+    half4 _SSAOBlueNoiseParams;
+    #define BlueNoiseScale          _SSAOBlueNoiseParams.xy
+    #define BlueNoiseOffset         _SSAOBlueNoiseParams.zw
 #endif
 
 #if defined(SHADER_API_GLES) && !defined(SHADER_API_GLES3)
@@ -47,15 +47,14 @@ half4 _SSAOBlueNoiseParams;
 #elif defined(_SAMPLE_COUNT_MEDIUM)
     static const int SAMPLE_COUNT = 8;
 #else
-static const int SAMPLE_COUNT = 4;
+    static const int SAMPLE_COUNT = 4;
 #endif
 // Hardcoded random UV values that improves performance.
 // The values were taken from this function:
 // r = frac(43758.5453 * sin( dot(float2(12.9898, 78.233), uv)) ));
 // Indices  0 to 19 are for u = 0.0
 // Indices 20 to 39 are for u = 1.0
-static half SSAORandomUV[40] =
-{
+static half SSAORandomUV[40] = {
     0.00000000, // 00
     0.33984375, // 01
     0.75390625, // 02
@@ -97,6 +96,7 @@ static half SSAORandomUV[40] =
     0.93333340, // 37
     0.87058830, // 38
     0.56862750, // 39
+
 };
 
 // Function defines
@@ -140,56 +140,48 @@ static const half HALF_HUNDRED = half(100.0);
 #if defined(USING_STEREO_MATRICES)
     #define unity_eyeIndex unity_StereoEyeIndex
 #else
-#define unity_eyeIndex 0
+    #define unity_eyeIndex 0
 #endif
 
 
-half4 PackAONormal(half ao, half3 n)
-{
+half4 PackAONormal(half ao, half3 n) {
     n *= HALF_HALF;
     n += HALF_HALF;
     return half4(ao, n);
 }
 
-half3 GetPackedNormal(half4 p)
-{
+half3 GetPackedNormal(half4 p) {
     return p.gba * HALF_TWO - HALF_ONE;
 }
 
-half GetPackedAO(half4 p)
-{
+half GetPackedAO(half4 p) {
     return p.r;
 }
 
-half EncodeAO(half x)
-{
+half EncodeAO(half x) {
     #if UNITY_COLORSPACE_GAMMA
         return half(1.0 - max(LinearToSRGB(1.0 - saturate(x)), 0.0));
     #else
-    return x;
+        return x;
     #endif
 }
 
-half CompareNormal(half3 d1, half3 d2)
-{
+half CompareNormal(half3 d1, half3 d2) {
     return smoothstep(kGeometryCoeff, HALF_ONE, dot(d1, d2));
 }
 
-float2 GetScreenSpacePosition(float2 uv)
-{
+float2 GetScreenSpacePosition(float2 uv) {
     return float2(uv * SCREEN_PARAMS.xy * DOWNSAMPLE);
 }
 
 // Pseudo random number generator
-half GetRandomVal(half u, half sampleIndex)
-{
+half GetRandomVal(half u, half sampleIndex) {
     return SSAORandomUV[u * 20 + sampleIndex];
 }
 
 // Sample point picker
 // 获取半球上随机一点，参数：uv，循环次数
-half3 PickSamplePoint(float2 uv, int sampleIndex, half sampleIndexHalf, half rcpSampleCount, half3 normal_o, float2 pixelDensity)
-{
+half3 PickSamplePoint(float2 uv, int sampleIndex, half sampleIndexHalf, half rcpSampleCount, half3 normal_o, float2 pixelDensity) {
     // 两种方法：采样噪声图和交错梯度
     #if defined(_BLUE_NOISE)
         const half lerpVal = sampleIndexHalf * rcpSampleCount;
@@ -202,15 +194,17 @@ half3 PickSamplePoint(float2 uv, int sampleIndex, half sampleIndexHalf, half rcp
         v *= (dot(normal_o, v) >= HALF_ZERO) * HALF_TWO - HALF_ONE;
         v *= lerp(0.1, 1.0, lerpVal * lerpVal);
     #else
-    const float2 positionSS = GetScreenSpacePosition(uv);
-    const half noise = half(InterleavedGradientNoise(positionSS, sampleIndex));
-    const half u = frac(GetRandomVal(HALF_ZERO, sampleIndex) + noise) * HALF_TWO - HALF_ONE;
-    const half theta = (GetRandomVal(HALF_ONE, sampleIndex) + noise) * HALF_TWO_PI;
-    const half u2 = half(sqrt(HALF_ONE - u * u));
+        const float2 positionSS = GetScreenSpacePosition(uv); // 屏幕空间位置
+        const half noise = half(InterleavedGradientNoise(positionSS, sampleIndex));
+        const half u = frac(GetRandomVal(HALF_ZERO, sampleIndex) + noise) * HALF_TWO - HALF_ONE;
+        const half theta = (GetRandomVal(HALF_ONE, sampleIndex) + noise) * HALF_TWO_PI;
+        const half u2 = half(sqrt(HALF_ONE - u * u));
 
-    half3 v = half3(u2 * cos(theta), u2 * sin(theta), u);
-    v *= sqrt((sampleIndexHalf + HALF_ONE) * rcpSampleCount);  // // 随着采样次数越向外采样
-    v = faceforward(v, -normal_o, v); // https://thebookofshaders.com/glossary/?search=faceforward  确保v跟normal一个方向
+        half3 v = half3(u2 * cos(theta), u2 * sin(theta), u);
+        v *= sqrt((sampleIndexHalf + HALF_ONE) * rcpSampleCount);  // 随着采样次数越向外采样
+        // returns a normal as-is if a vertex's eye-space position vector points in the opposite direction of a geometric normal, otherwise return the negated version of the normal
+        // 如果顶点的眼空间位置向量指向与几何法线相反的方向，则返回法线原样，否则返回法线的负值
+        v = faceforward(v, -normal_o, v); // https://thebookofshaders.com/glossary/?search=faceforward  确保v跟normal一个方向
     #endif
 
     v *= RADIUS;  // 缩放到[0, RADIUS]
@@ -218,31 +212,27 @@ half3 PickSamplePoint(float2 uv, int sampleIndex, half sampleIndexHalf, half rcp
     return v;
 }
 
-float SampleDepth(float2 uv)
-{
+float SampleDepth(float2 uv) {
     return SampleSceneDepth(uv.xy);
 }
 
-float GetLinearEyeDepth(float rawDepth)
-{
+float GetLinearEyeDepth(float rawDepth) {
     // 如果是正交矩阵
     #if defined(_ORTHOGRAPHIC)
-    return LinearDepthToEyeDepth(rawDepth);
+        return LinearDepthToEyeDepth(rawDepth);
     #else
-    return LinearEyeDepth(rawDepth, _ZBufferParams); // 投影矩阵
+        return LinearEyeDepth(rawDepth, _ZBufferParams); // 投影矩阵
     #endif
 }
 
-float SampleAndGetLinearEyeDepth(float2 uv)
-{
+float SampleAndGetLinearEyeDepth(float2 uv) {
     const float rawDepth = SampleDepth(uv);
     return GetLinearEyeDepth(rawDepth);
 }
 
 // This returns a vector in world unit (not a position), from camera to the given point described by uv screen coordinate and depth (in absolute world unit).
 // 重建世界空间下的观察位置坐标
-half3 ReconstructViewPos(float2 uv, float linearDepth)
-{
+half3 ReconstructViewPos(float2 uv, float linearDepth) {
     #if defined(_FOVEATED_RENDERING_NON_UNIFORM_RASTER)
         uv = RemapFoveatedRenderingDistort(uv); // 如果事视网膜屏，就是这个uv
     #endif
@@ -254,13 +244,13 @@ half3 ReconstructViewPos(float2 uv, float linearDepth)
     #if defined(_ORTHOGRAPHIC)
         float zScale = linearDepth * _ProjectionParams.w; // divide by far plane
         float3 viewPos = _CameraViewTopLeftCorner[unity_eyeIndex].xyz
-                            + _CameraViewXExtent[unity_eyeIndex].xyz * uv.x
-                            + _CameraViewYExtent[unity_eyeIndex].xyz * uv.y
-                            + _CameraViewZExtent[unity_eyeIndex].xyz * zScale;
+        + _CameraViewXExtent[unity_eyeIndex].xyz * uv.x
+        + _CameraViewYExtent[unity_eyeIndex].xyz * uv.y
+        + _CameraViewZExtent[unity_eyeIndex].xyz * zScale;
     #else
-    float zScale = linearDepth * _ProjectionParams2.x; // divide by near plane , 因为_ProjectionParams2.x是相机近平面的倒数
-    float3 viewPos = _CameraViewTopLeftCorner[unity_eyeIndex].xyz + _CameraViewXExtent[unity_eyeIndex].xyz * uv.x + _CameraViewYExtent[unity_eyeIndex].xyz * uv.y;
-    viewPos *= zScale;
+        float zScale = linearDepth * _ProjectionParams2.x; // divide by near plane , 因为_ProjectionParams2.x是相机近平面的倒数
+        float3 viewPos = _CameraViewTopLeftCorner[unity_eyeIndex].xyz + _CameraViewXExtent[unity_eyeIndex].xyz * uv.x + _CameraViewYExtent[unity_eyeIndex].xyz * uv.y;
+        viewPos *= zScale;
     #endif
 
     return half3(viewPos);
@@ -273,83 +263,78 @@ half3 ReconstructViewPos(float2 uv, float linearDepth)
 // High:   5 taps on each direction: | z | x | * | y | w |
 // https://atyuwen.github.io/posts/normal-reconstruction/
 // https://wickedengine.net/2019/09/22/improved-normal-reconstruction-from-depth/
-half3 ReconstructNormal(float2 uv, float linearDepth, float3 vpos, float2 pixelDensity)
-{
+half3 ReconstructNormal(float2 uv, float linearDepth, float3 vpos, float2 pixelDensity) {
     #if defined(_SOURCE_DEPTH_LOW)
         return half3(normalize(cross(ddy(vpos), ddx(vpos))));
     #else
-    float2 delta = float2(_SourceSize.zw * 2.0);
+        float2 delta = float2(_SourceSize.zw * 2.0);
 
-    pixelDensity = rcp(pixelDensity);
+        pixelDensity = rcp(pixelDensity);
 
-    // Sample the neighbour fragments
-    float2 lUV = float2(-delta.x, 0.0) * pixelDensity;
-    float2 rUV = float2(delta.x, 0.0) * pixelDensity;
-    float2 uUV = float2(0.0, delta.y) * pixelDensity;
-    float2 dUV = float2(0.0, -delta.y) * pixelDensity;
+        // Sample the neighbour fragments
+        float2 lUV = float2(-delta.x, 0.0) * pixelDensity;
+        float2 rUV = float2(delta.x, 0.0) * pixelDensity;
+        float2 uUV = float2(0.0, delta.y) * pixelDensity;
+        float2 dUV = float2(0.0, -delta.y) * pixelDensity;
 
-    float3 l1 = float3(uv + lUV, 0.0);
-    l1.z = SampleAndGetLinearEyeDepth(l1.xy); // Left1
-    float3 r1 = float3(uv + rUV, 0.0);
-    r1.z = SampleAndGetLinearEyeDepth(r1.xy); // Right1
-    float3 u1 = float3(uv + uUV, 0.0);
-    u1.z = SampleAndGetLinearEyeDepth(u1.xy); // Up1
-    float3 d1 = float3(uv + dUV, 0.0);
-    d1.z = SampleAndGetLinearEyeDepth(d1.xy); // Down1
+        float3 l1 = float3(uv + lUV, 0.0);
+        l1.z = SampleAndGetLinearEyeDepth(l1.xy); // Left1
+        float3 r1 = float3(uv + rUV, 0.0);
+        r1.z = SampleAndGetLinearEyeDepth(r1.xy); // Right1
+        float3 u1 = float3(uv + uUV, 0.0);
+        u1.z = SampleAndGetLinearEyeDepth(u1.xy); // Up1
+        float3 d1 = float3(uv + dUV, 0.0);
+        d1.z = SampleAndGetLinearEyeDepth(d1.xy); // Down1
 
-    // Determine the closest horizontal and vertical pixels...
-    // horizontal: left = 0.0 right = 1.0
-    // vertical  : down = 0.0    up = 1.0
-    #if defined(_SOURCE_DEPTH_MEDIUM)
-             uint closest_horizontal = l1.z > r1.z ? 0 : 1;
-             uint closest_vertical   = d1.z > u1.z ? 0 : 1;
-    #else
-    float3 l2 = float3(uv + lUV * 2.0, 0.0);
-    l2.z = SampleAndGetLinearEyeDepth(l2.xy); // Left2
-    float3 r2 = float3(uv + rUV * 2.0, 0.0);
-    r2.z = SampleAndGetLinearEyeDepth(r2.xy); // Right2
-    float3 u2 = float3(uv + uUV * 2.0, 0.0);
-    u2.z = SampleAndGetLinearEyeDepth(u2.xy); // Up2
-    float3 d2 = float3(uv + dUV * 2.0, 0.0);
-    d2.z = SampleAndGetLinearEyeDepth(d2.xy); // Down2
+        // Determine the closest horizontal and vertical pixels...
+        // horizontal: left = 0.0 right = 1.0
+        // vertical  : down = 0.0    up = 1.0
+        #if defined(_SOURCE_DEPTH_MEDIUM)
+            uint closest_horizontal = l1.z > r1.z ? 0 : 1;
+            uint closest_vertical = d1.z > u1.z ? 0 : 1;
+        #else
+            float3 l2 = float3(uv + lUV * 2.0, 0.0);
+            l2.z = SampleAndGetLinearEyeDepth(l2.xy); // Left2
+            float3 r2 = float3(uv + rUV * 2.0, 0.0);
+            r2.z = SampleAndGetLinearEyeDepth(r2.xy); // Right2
+            float3 u2 = float3(uv + uUV * 2.0, 0.0);
+            u2.z = SampleAndGetLinearEyeDepth(u2.xy); // Up2
+            float3 d2 = float3(uv + dUV * 2.0, 0.0);
+            d2.z = SampleAndGetLinearEyeDepth(d2.xy); // Down2
 
-    const uint closest_horizontal = abs((2.0 * l1.z - l2.z) - linearDepth) < abs((2.0 * r1.z - r2.z) - linearDepth) ? 0 : 1;
-    const uint closest_vertical = abs((2.0 * d1.z - d2.z) - linearDepth) < abs((2.0 * u1.z - u2.z) - linearDepth) ? 0 : 1;
-    #endif
+            const uint closest_horizontal = abs((2.0 * l1.z - l2.z) - linearDepth) < abs((2.0 * r1.z - r2.z) - linearDepth) ? 0 : 1;
+            const uint closest_vertical = abs((2.0 * d1.z - d2.z) - linearDepth) < abs((2.0 * u1.z - u2.z) - linearDepth) ? 0 : 1;
+        #endif
 
-    // Calculate the triangle, in a counter-clockwize order, to
-    // use based on the closest horizontal and vertical depths.
-    // h == 0.0 && v == 0.0: p1 = left,  p2 = down
-    // h == 1.0 && v == 0.0: p1 = down,  p2 = right
-    // h == 1.0 && v == 1.0: p1 = right, p2 = up
-    // h == 0.0 && v == 1.0: p1 = up,    p2 = left
-    // Calculate the view space positions for the three points...
-    half3 P1;
-    half3 P2;
-    if (closest_vertical == 0)
-    {
-        P1 = half3(closest_horizontal == 0 ? l1 : d1);
-        P2 = half3(closest_horizontal == 0 ? d1 : r1);
-    }
-    else
-    {
-        P1 = half3(closest_horizontal == 0 ? u1 : r1);
-        P2 = half3(closest_horizontal == 0 ? l1 : u1);
-    }
+        // Calculate the triangle, in a counter-clockwize order, to
+        // use based on the closest horizontal and vertical depths.
+        // h == 0.0 && v == 0.0: p1 = left,  p2 = down
+        // h == 1.0 && v == 0.0: p1 = down,  p2 = right
+        // h == 1.0 && v == 1.0: p1 = right, p2 = up
+        // h == 0.0 && v == 1.0: p1 = up,    p2 = left
+        // Calculate the view space positions for the three points...
+        half3 P1;
+        half3 P2;
+        if (closest_vertical == 0) {
+            P1 = half3(closest_horizontal == 0 ? l1 : d1);
+            P2 = half3(closest_horizontal == 0 ? d1 : r1);
+        } else {
+            P1 = half3(closest_horizontal == 0 ? u1 : r1);
+            P2 = half3(closest_horizontal == 0 ? l1 : u1);
+        }
 
-    // Use the cross product to calculate the normal...
-    return half3(normalize(cross(ReconstructViewPos(P2.xy, P2.z) - vpos, ReconstructViewPos(P1.xy, P1.z) - vpos)));
+        // Use the cross product to calculate the normal...
+        return half3(normalize(cross(ReconstructViewPos(P2.xy, P2.z) - vpos, ReconstructViewPos(P1.xy, P1.z) - vpos)));
     #endif
 }
 
 // 根据关键字来决定，获取法线的方式
-half3 SampleNormal(float2 uv, float linearDepth, float2 pixelDensity)
-{
+half3 SampleNormal(float2 uv, float linearDepth, float2 pixelDensity) {
     #if defined(_SOURCE_DEPTH_NORMALS)
         return half3(SampleSceneNormals(uv)); // 采样法线
     #else
-    float3 vpos = ReconstructViewPos(uv, linearDepth);
-    return ReconstructNormal(uv, linearDepth, vpos, pixelDensity); // 使用深度重建法线值
+        float3 vpos = ReconstructViewPos(uv, linearDepth);
+        return ReconstructNormal(uv, linearDepth, vpos, pixelDensity); // 使用深度重建法线值
     #endif
 }
 
@@ -357,13 +342,12 @@ half3 SampleNormal(float2 uv, float linearDepth, float2 pixelDensity)
 // "Alchemy screen-space ambient obscurance algorithm"
 // http://graphics.cs.williams.edu/papers/AlchemyHPG11/
 // 基于摩根 2011 年的基于距离的 AO 估算器
-half4 SSAO(Varyings input) : SV_Target
-{
+half4 SSAO(Varyings input) : SV_Target {
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
     float2 uv = input.texcoord;
     // Early Out for Sky...
     float rawDepth_o = SampleDepth(uv); // 采样深度值
-    if (rawDepth_o < SKY_DEPTH_VALUE) 
+    if (rawDepth_o < SKY_DEPTH_VALUE)
         return PackAONormal(HALF_ZERO, HALF_ZERO); // 深度趋于0的时候，解包AO的法线为0，值为half4(0, 0.5)
 
     // Early Out for Falloff
@@ -375,7 +359,7 @@ half4 SSAO(Varyings input) : SV_Target
     #if defined(_FOVEATED_RENDERING_NON_UNIFORM_RASTER) // 视网膜渲染
         float2 pixelDensity = RemapFoveatedRenderingDensity(RemapFoveatedRenderingDistort(uv));
     #else
-    float2 pixelDensity = float2(1.0f, 1.0f);  // 得到像素密度
+        float2 pixelDensity = float2(1.0f, 1.0f);  // 得到像素密度
     #endif
 
     // Normal for this fragment 采样法线
@@ -392,8 +376,7 @@ half4 SSAO(Varyings input) : SV_Target
     half ao = HALF_ZERO; // 初始为0
     half sHalf = HALF_MINUS_ONE; // 初始为-1
     UNITY_UNROLL
-    for (int s = 0; s < SAMPLE_COUNT; s++)
-    {
+    for (int s = 0; s < SAMPLE_COUNT; s++) {
         sHalf += HALF_ONE; // 循环一次增加一个1
 
         // Sample point
@@ -404,16 +387,17 @@ half4 SSAO(Varyings input) : SV_Target
             camTransform101112.x * vpos_s1.x + camTransform101112.y * vpos_s1.y + camTransform101112.z * vpos_s1.z
         );
 
+        // 计算采样点的uv
         half zDist = HALF_ZERO;
         #if defined(_ORTHOGRAPHIC)
             zDist = halfLinearDepth_o;
             half2 uv_s1_01 = saturate((spos_s1 + HALF_ONE) * HALF_HALF);
         #else
-        zDist = half(-dot(UNITY_MATRIX_V[2].xyz, vpos_s1));
-        half2 uv_s1_01 = saturate(half2(spos_s1 * rcp(zDist) + HALF_ONE) * HALF_HALF); // rcp 是倒数函数
+            zDist = half(-dot(UNITY_MATRIX_V[2].xyz, vpos_s1));
+            half2 uv_s1_01 = saturate(half2(spos_s1 * rcp(zDist) + HALF_ONE) * HALF_HALF); // rcp 是倒数函数
         #endif
 
-        #if defined(_FOVEATED_RENDERING_NON_UNIFORM_RASTER)
+        #if defined(_FOVEATED_RENDERING_NON_UNIFORM_RASTER) // 视网膜渲染
             uv_s1_01 = RemapFoveatedRenderingResolve(uv_s1_01);
         #endif
 
@@ -460,8 +444,7 @@ half4 SSAO(Varyings input) : SV_Target
 // ------------------------------------------------------------------
 
 // Geometry-aware separable bilateral filter
-half4 Blur(const float2 uv, const float2 delta) : SV_Target
-{
+half4 Blur(const float2 uv, const float2 delta) : SV_Target {
     half4 p0 = SAMPLE_BASEMAP(uv);
     half4 p1a = SAMPLE_BASEMAP(uv - delta * 1.3846153846);
     half4 p1b = SAMPLE_BASEMAP(uv + delta * 1.3846153846);
@@ -488,13 +471,12 @@ half4 Blur(const float2 uv, const float2 delta) : SV_Target
 }
 
 // Geometry-aware bilateral filter (single pass/small kernel)
-half BlurSmall(const float2 uv, const float2 delta)
-{
+half BlurSmall(const float2 uv, const float2 delta) {
     half4 p0 = SAMPLE_BASEMAP(uv);
     half4 p1 = SAMPLE_BASEMAP(uv + float2(-delta.x, -delta.y));
-    half4 p2 = SAMPLE_BASEMAP(uv + float2( delta.x, -delta.y));
+    half4 p2 = SAMPLE_BASEMAP(uv + float2(delta.x, -delta.y));
     half4 p3 = SAMPLE_BASEMAP(uv + float2(-delta.x, delta.y));
-    half4 p4 = SAMPLE_BASEMAP(uv + float2( delta.x, delta.y));
+    half4 p4 = SAMPLE_BASEMAP(uv + float2(delta.x, delta.y));
 
     half3 n0 = GetPackedNormal(p0);
 
@@ -514,8 +496,7 @@ half BlurSmall(const float2 uv, const float2 delta)
     return s *= rcp(w0 + w1 + w2 + w3 + w4);
 }
 
-half4 HorizontalBlur(Varyings input) : SV_Target
-{
+half4 HorizontalBlur(Varyings input) : SV_Target {
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
     const float2 uv = input.texcoord;
@@ -523,8 +504,7 @@ half4 HorizontalBlur(Varyings input) : SV_Target
     return Blur(uv, delta);
 }
 
-half4 VerticalBlur(Varyings input) : SV_Target
-{
+half4 VerticalBlur(Varyings input) : SV_Target {
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
     const float2 uv = input.texcoord;
@@ -532,8 +512,7 @@ half4 VerticalBlur(Varyings input) : SV_Target
     return Blur(uv, delta);
 }
 
-half4 FinalBlur(Varyings input) : SV_Target
-{
+half4 FinalBlur(Varyings input) : SV_Target {
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
     const float2 uv = input.texcoord;
@@ -547,8 +526,7 @@ half4 FinalBlur(Varyings input) : SV_Target
 // ------------------------------------------------------------------
 
 // https://software.intel.com/content/www/us/en/develop/blogs/an-investigation-of-fast-real-time-gpu-based-image-blur-algorithms.html
-half GaussianBlur(half2 uv, half2 pixelOffset)
-{
+half GaussianBlur(half2 uv, half2 pixelOffset) {
     half colOut = 0;
 
     // Kernel width 7 x 7
@@ -564,8 +542,7 @@ half GaussianBlur(half2 uv, half2 pixelOffset)
     };
 
     UNITY_UNROLL
-    for (int i = 0; i < stepCount; i++)
-    {
+    for (int i = 0; i < stepCount; i++) {
         half2 texCoordOffset = gOffsets[i] * pixelOffset;
         half4 p1 = SAMPLE_BASEMAP(uv + texCoordOffset);
         half4 p2 = SAMPLE_BASEMAP(uv - texCoordOffset);
@@ -576,8 +553,7 @@ half GaussianBlur(half2 uv, half2 pixelOffset)
     return colOut;
 }
 
-half HorizontalGaussianBlur(Varyings input) : SV_Target
-{
+half HorizontalGaussianBlur(Varyings input) : SV_Target {
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
     half2 uv = input.texcoord;
@@ -586,8 +562,7 @@ half HorizontalGaussianBlur(Varyings input) : SV_Target
     return GaussianBlur(uv, delta);
 }
 
-half VerticalGaussianBlur(Varyings input) : SV_Target
-{
+half VerticalGaussianBlur(Varyings input) : SV_Target {
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
     half2 uv = input.texcoord;
@@ -606,8 +581,7 @@ half VerticalGaussianBlur(Varyings input) : SV_Target
 // Used in DOUBLE-S.T.E.A.L. (aka Wreckless)
 // From his GDC2003 Presentation: Frame Buffer Postprocessing Effects in  DOUBLE-S.T.E.A.L (Wreckless)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-half KawaseBlurFilter(half2 texCoord, half2 pixelSize, half iteration)
-{
+half KawaseBlurFilter(half2 texCoord, half2 pixelSize, half iteration) {
     half2 texCoordSample;
     half2 halfPixelSize = pixelSize * HALF_HALF;
     half2 dUV = (pixelSize.xy * half2(iteration, iteration)) + halfPixelSize.xy;
@@ -643,8 +617,7 @@ half KawaseBlurFilter(half2 texCoord, half2 pixelSize, half iteration)
     return cOut;
 }
 
-half KawaseBlur(Varyings input) : SV_Target
-{
+half KawaseBlur(Varyings input) : SV_Target {
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
     half2 uv = input.texcoord;

@@ -322,6 +322,7 @@ namespace UnityEngine.Rendering.Universal {
                 CoreUtils.SetKeyword(m_Material, k_OrthographicCameraKeyword, renderingData.cameraData.camera.orthographic);
                 CoreUtils.SetKeyword(m_Material, k_AOBlueNoiseKeyword, false);
                 CoreUtils.SetKeyword(m_Material, k_AOInterleavedGradientKeyword, false);
+                // 区分AO的方法
                 switch (m_CurrentSettings.AOMethod) {
                     case ScreenSpaceAmbientOcclusionSettings.AOMethodOptions.BlueNoise:
                         CoreUtils.SetKeyword(m_Material, k_AOBlueNoiseKeyword, true);
@@ -331,7 +332,7 @@ namespace UnityEngine.Rendering.Universal {
                         m_BlurRandomOffsetY = Random.value;
 
                         Texture2D noiseTexture = m_BlueNoiseTextures[m_BlueNoiseTextureIndex];
-                        m_Material.SetTexture(s_BlueNoiseTextureID, noiseTexture);
+                        m_Material.SetTexture(s_BlueNoiseTextureID, noiseTexture); // 设置纹理
 
                         m_Material.SetVector(s_SSAOParamsID, new Vector4(
                             m_CurrentSettings.Intensity, // Intensity
