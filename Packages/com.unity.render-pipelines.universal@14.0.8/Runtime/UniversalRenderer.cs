@@ -1317,6 +1317,8 @@ namespace UnityEngine.Rendering.Universal
         }
 
         /// <inheritdoc />
+        /// 这个函数根据渲染模式、阴影投射和光源数量等因素，设置裁剪参数的各个选项，以控制渲染管线在裁剪阶段的行为。这些裁剪参数将在后续的渲染过程中被使用。
+        /// 准备阶段用于设置裁剪参数，它并不直接参与实际的渲染过程
         public override void SetupCullingParameters(ref ScriptableCullingParameters cullingParameters,
             ref CameraData cameraData)
         {
@@ -1325,11 +1327,12 @@ namespace UnityEngine.Rendering.Universal
             //     asset.maxAdditionalLightsCount == 0)
             if (renderingModeActual == RenderingMode.ForwardPlus)
             {
-                cullingParameters.cullingOptions |= CullingOptions.DisablePerObjectCulling;
+                cullingParameters.cullingOptions |= CullingOptions.DisablePerObjectCulling; // 禁用物体级别的剔除
             }
 
             // We disable shadow casters if both shadow casting modes are turned off
             // or the shadow distance has been turned down to zero
+            // 根据阴影投射的设置情况，决定是否禁用阴影投射物体的裁剪。当主光源和其他附加光源的阴影投射都被禁用，或者阴影距离设置为0时，将裁剪选项的ShadowCasters位设置为false，即禁用阴影投射物体的裁剪。
             bool isShadowCastingDisabled = !UniversalRenderPipeline.asset.supportsMainLightShadows && !UniversalRenderPipeline.asset.supportsAdditionalLightShadows;
             bool isShadowDistanceZero = Mathf.Approximately(cameraData.maxShadowDistance, 0.0f);
             if (isShadowCastingDisabled || isShadowDistanceZero)
@@ -1337,6 +1340,8 @@ namespace UnityEngine.Rendering.Universal
                 cullingParameters.cullingOptions &= ~CullingOptions.ShadowCasters;
             }
 
+            // 根据渲染模式的不同，设置最大可见光源的数量。如果渲染模式是Deferred，将最大可见光源数量设置为0xFFFF（即无限大），
+            // 否则将最大可见光源数量设置为UniversalRenderPipeline.maxVisibleAdditionalLights + 1（即附加光源数量加上主光源）。
             if (this.renderingModeActual == RenderingMode.Deferred)
                 cullingParameters.maximumVisibleLights = 0xFFFF;
             else
@@ -1348,6 +1353,7 @@ namespace UnityEngine.Rendering.Universal
                 //       i.e ScriptableRenderContext.Cull() might return  ( UniversalRenderPipeline.maxVisibleAdditionalLights + 1 )  visible additional lights !
                 cullingParameters.maximumVisibleLights = UniversalRenderPipeline.maxVisibleAdditionalLights + 1;
             }
+            // 设置裁剪参数的阴影距离为CameraData中的最大阴影距离。
             cullingParameters.shadowDistance = cameraData.maxShadowDistance;
 
             cullingParameters.conservativeEnclosingSphere = UniversalRenderPipeline.asset.conservativeEnclosingSphere;

@@ -770,6 +770,7 @@ namespace UnityEngine.Rendering.Universal
         /// <summary>
         /// Override this method to configure the culling parameters for the renderer. You can use this to configure if
         /// lights should be culled per-object or the maximum shadow distance for example.
+        /// 覆盖此方法为渲染器配置剔除参数。例如，你可以使用它来配置是否应该对每个对象或最大阴影距离进行灯光剔除。
         /// </summary>
         /// <param name="cullingParameters">Use this to change culling parameters used by the render pipeline.</param>
         /// <param name="cameraData">Current render state information.</param>
@@ -2074,8 +2075,11 @@ namespace UnityEngine.Rendering.Universal
             context.DrawWireOverlay(camera);
         }
 
+        // 这段代码是在渲染之前，对每个RenderPass进行必要的准备工作，并将渲染命令发送给渲染上下文执行
         void InternalStartRendering(ScriptableRenderContext context, ref RenderingData renderingData)
         {
+            // 使用using语句创建了一个新的ProfilingScope对象，用于对渲染过程进行性能分析
+            // using语句的作用是在代码块执行完毕后，自动调用ProfilingScope对象的Dispose方法，释放相关资源，避免资源泄漏和潜在的问题。
             using (new ProfilingScope(null, Profiling.internalStartRendering))
             {
                 for (int i = 0; i < m_ActiveRenderPassQueue.Count; ++i)
@@ -2084,7 +2088,7 @@ namespace UnityEngine.Rendering.Universal
                 }
             }
 
-            context.ExecuteCommandBuffer(renderingData.commandBuffer);
+            context.ExecuteCommandBuffer(renderingData.commandBuffer); // 渲染命令发送给渲染上下文执行
             renderingData.commandBuffer.Clear();
         }
 
