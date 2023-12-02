@@ -600,8 +600,8 @@ namespace UnityEngine.Rendering.Universal
 
                 using (new ProfilingScope(null, Profiling.Pipeline.Renderer.setupCullingParameters))
                 {
-                    renderer.OnPreCullRenderPasses(in cameraData);
-                    renderer.SetupCullingParameters(ref cullingParameters, ref cameraData);
+                    renderer.OnPreCullRenderPasses(in cameraData); // 为每一个feature做剔除之前做回调
+                    renderer.SetupCullingParameters(ref cullingParameters, ref cameraData); // 设置剔除参数
                 }
 
                 context.ExecuteCommandBuffer(cmd); // Send all the commands enqueued so far in the CommandBuffer cmd, to the ScriptableRenderContext context
@@ -635,7 +635,7 @@ namespace UnityEngine.Rendering.Universal
                 // Do NOT use cameraData after 'InitializeRenderingData'. CameraData state may diverge otherwise.
                 // RenderingData takes a copy of the CameraData.
                 var cullResults = context.Cull(ref cullingParameters);
-                InitializeRenderingData(asset, ref cameraData, ref cullResults, anyPostProcessingEnabled, cmd, out var renderingData);
+                InitializeRenderingData(asset, ref cameraData, ref cullResults, anyPostProcessingEnabled, cmd, out var renderingData); // 初始化渲染需要用到的数据，并输出渲染数据
 #if ADAPTIVE_PERFORMANCE_2_0_0_OR_NEWER
                 if (asset.useAdaptivePerformance)
                     ApplyAdaptivePerformance(ref renderingData);
@@ -1180,8 +1180,8 @@ namespace UnityEngine.Rendering.Universal
                 cameraData.renderType = CameraRenderType.Base;
                 cameraData.clearDepth = true;
                 cameraData.postProcessEnabled = CoreUtils.ArePostProcessesEnabled(camera);
-                cameraData.requiresDepthTexture = settings.supportsCameraDepthTexture;
-                cameraData.requiresOpaqueTexture = settings.supportsCameraOpaqueTexture;
+                cameraData.requiresDepthTexture = settings.supportsCameraDepthTexture; // 在URP资产文件中勾选了深度纹理
+                cameraData.requiresOpaqueTexture = settings.supportsCameraOpaqueTexture; // 在URP资产文件中勾选了Color纹理
                 cameraData.renderer = asset.scriptableRenderer;
                 cameraData.useScreenCoordOverride = false;
                 cameraData.screenSizeOverride = cameraData.pixelRect.size;

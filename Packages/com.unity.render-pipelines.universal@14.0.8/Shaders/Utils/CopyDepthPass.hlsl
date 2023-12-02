@@ -15,15 +15,15 @@
 #endif
 
 #if defined(UNITY_STEREO_INSTANCING_ENABLED) || defined(UNITY_STEREO_MULTIVIEW_ENABLED)
-#define DEPTH_TEXTURE_MS(name, samples) Texture2DMSArray<float, samples> name
-#define DEPTH_TEXTURE(name) TEXTURE2D_ARRAY_FLOAT(name)
-#define LOAD(uv, sampleIndex) LOAD_TEXTURE2D_ARRAY_MSAA(_CameraDepthAttachment, uv, unity_StereoEyeIndex, sampleIndex)
-#define SAMPLE(uv) SAMPLE_TEXTURE2D_ARRAY(_CameraDepthAttachment, sampler_CameraDepthAttachment, uv, unity_StereoEyeIndex).r
+    #define DEPTH_TEXTURE_MS(name, samples) Texture2DMSArray < float, samples > name
+    #define DEPTH_TEXTURE(name) TEXTURE2D_ARRAY_FLOAT(name)
+    #define LOAD(uv, sampleIndex) LOAD_TEXTURE2D_ARRAY_MSAA(_CameraDepthAttachment, uv, unity_StereoEyeIndex, sampleIndex)
+    #define SAMPLE(uv) SAMPLE_TEXTURE2D_ARRAY(_CameraDepthAttachment, sampler_CameraDepthAttachment, uv, unity_StereoEyeIndex).r
 #else
-#define DEPTH_TEXTURE_MS(name, samples) Texture2DMS<float, samples> name
-#define DEPTH_TEXTURE(name) TEXTURE2D_FLOAT(name)
-#define LOAD(uv, sampleIndex) LOAD_TEXTURE2D_MSAA(_CameraDepthAttachment, uv, sampleIndex)
-#define SAMPLE(uv) SAMPLE_DEPTH_TEXTURE(_CameraDepthAttachment, sampler_CameraDepthAttachment, uv)
+    #define DEPTH_TEXTURE_MS(name, samples) Texture2DMS < float, samples > name
+    #define DEPTH_TEXTURE(name) TEXTURE2D_FLOAT(name)
+    #define LOAD(uv, sampleIndex) LOAD_TEXTURE2D_MSAA(_CameraDepthAttachment, uv, sampleIndex)
+    #define SAMPLE(uv) SAMPLE_DEPTH_TEXTURE(_CameraDepthAttachment, sampler_CameraDepthAttachment, uv)
 #endif
 
 #if MSAA_SAMPLES == 1
@@ -42,29 +42,27 @@
     #define DEPTH_OP max
 #endif
 
-float SampleDepth(float2 uv)
-{
-#if MSAA_SAMPLES == 1
-    return SAMPLE(uv);
-#else
-    int2 coord = int2(uv * _CameraDepthAttachment_TexelSize.zw);
-    float outDepth = DEPTH_DEFAULT_VALUE;
+float SampleDepth(float2 uv) {
+    #if MSAA_SAMPLES == 1
+        return SAMPLE(uv);
+    #else
+        int2 coord = int2(uv * _CameraDepthAttachment_TexelSize.zw);
+        float outDepth = DEPTH_DEFAULT_VALUE;
 
-    UNITY_UNROLL
-    for (int i = 0; i < MSAA_SAMPLES; ++i)
+        UNITY_UNROLL
+        for (int i = 0; i < MSAA_SAMPLES; ++i)
         outDepth = DEPTH_OP(LOAD(coord, i), outDepth);
-    return outDepth;
-#endif
+        return outDepth;
+    #endif
 }
 
 #if defined(_OUTPUT_DEPTH)
-float frag(Varyings input) : SV_Depth
+    float frag(Varyings input) : SV_Depth
 #else
-float frag(Varyings input) : SV_Target
-#endif
-{
-    UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-    return SampleDepth(input.texcoord);
+    float frag(Varyings input) : SV_Target
+#endif {
+UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+return SampleDepth(input.texcoord);
 }
 
 #endif

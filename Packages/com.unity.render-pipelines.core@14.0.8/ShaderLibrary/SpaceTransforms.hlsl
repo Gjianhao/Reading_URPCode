@@ -8,6 +8,7 @@
 // Caution: For HDRP, adding a function in this file requires adding the appropriate #define in PickingSpaceTransforms.hlsl
 
 // Return the PreTranslated ObjectToWorld Matrix (i.e matrix with _WorldSpaceCameraPos apply to it if we use camera relative rendering)
+// 返回预平移的 ObjectToWorld 矩阵（即如果使用相对于摄像机的渲染，则会应用 _WorldSpaceCameraPos 的矩阵）。
 float4x4 GetObjectToWorldMatrix()
 {
     return UNITY_MATRIX_M;
@@ -106,9 +107,11 @@ float3 TransformViewToWorld(float3 positionVS)
 }
 
 // Transforms position from object space to homogenous space
+// 模型空间坐标转为齐次裁剪空间坐标
 float4 TransformObjectToHClip(float3 positionOS)
 {
     // More efficient than computing M*VP matrix product
+    // 比计算 M*VP 矩阵乘积更高效
     return mul(GetWorldToHClipMatrix(), mul(GetObjectToWorldMatrix(), float4(positionOS, 1.0)));
 }
 

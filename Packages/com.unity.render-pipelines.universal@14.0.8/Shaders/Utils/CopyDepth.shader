@@ -1,11 +1,11 @@
-Shader "Hidden/Universal Render Pipeline/CopyDepth"
-{
-    SubShader
-    {
-        Tags { "RenderType" = "Opaque" "RenderPipeline" = "UniversalPipeline"}
+Shader "Hidden/Universal Render Pipeline/CopyDepth" {
+    SubShader {
+        Tags {
+            "RenderType" = "Opaque"
+            "RenderPipeline" = "UniversalPipeline"
+        }
 
-        Pass
-        {
+        Pass {
             Name "CopyDepth"
             ZTest Always ZWrite On ColorMask R
             Cull Off

@@ -53,6 +53,8 @@ namespace UnityEngine.Rendering
     /// <summary>
     /// Wrapper around CPU and GPU profiling samplers.
     /// Use this along ProfilingScope to profile a piece of code.
+    /// ProfilingSampler 类是一个用于控制 CPU 和 GPU 性能分析器标签的包装类，它可以用于和 ProfilingScope 一起分析一段代码的性能。
+    /// 它有一些属性和方法，可以用于获取采样器的名称、启用或禁用记录、获取 CPU 或 GPU 的执行时间和采样次数等信息。
     /// </summary>
     [IgnoredByDeepProfiler]
     public class ProfilingSampler
@@ -221,6 +223,7 @@ namespace UnityEngine.Rendering
         ProfilingSampler() { }
     }
 
+// 打开发包或者在编辑器模式下
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
     /// <summary>
     /// Scoped Profiling markers
@@ -228,9 +231,9 @@ namespace UnityEngine.Rendering
     [IgnoredByDeepProfiler]
     public struct ProfilingScope : IDisposable
     {
-        CommandBuffer       m_Cmd;
-        bool                m_Disposed;
-        ProfilingSampler    m_Sampler;
+        CommandBuffer m_Cmd;
+        bool m_Disposed;
+        ProfilingSampler m_Sampler;
 
         /// <summary>
         /// Profiling Scope constructor

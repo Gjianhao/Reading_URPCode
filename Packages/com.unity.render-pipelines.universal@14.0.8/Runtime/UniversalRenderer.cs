@@ -43,22 +43,25 @@ namespace UnityEngine.Rendering.Universal
     /// </summary>
     public sealed partial class UniversalRenderer : ScriptableRenderer
     {
-        #if UNITY_SWITCH || UNITY_ANDROID
+#if UNITY_SWITCH || UNITY_ANDROID
         const GraphicsFormat k_DepthStencilFormat = GraphicsFormat.D24_UNorm_S8_UInt;
         const int k_DepthBufferBits = 24;
-        #else
+#else
         const GraphicsFormat k_DepthStencilFormat = GraphicsFormat.D32_SFloat_S8_UInt;
         const int k_DepthBufferBits = 32;
-        #endif
+#endif
 
         const int k_FinalBlitPassQueueOffset = 1;
         const int k_AfterFinalBlitPassQueueOffset = k_FinalBlitPassQueueOffset + 1;
 
         static readonly List<ShaderTagId> k_DepthNormalsOnly = new List<ShaderTagId> { new ShaderTagId("DepthNormalsOnly") };
 
+        // 创建一个 Profiling 的静态类，用于存放一些和性能分析相关的字段，方便在其他地方使用。
         private static class Profiling
         {
+            // 一个字符串常量，表示类的名称，即 UniversalRenderer。
             private const string k_Name = nameof(UniversalRenderer);
+            // 一个 ProfilingSampler 类型的静态只读字段，表示一个用于分析创建相机渲染目标的性能的采样器，它的名称是由 k_Name 和 CreateCameraRenderTarget 拼接而成的。
             public static readonly ProfilingSampler createCameraRenderTarget = new ProfilingSampler($"{k_Name}.{nameof(CreateCameraRenderTarget)}");
         }
 
@@ -70,9 +73,9 @@ namespace UnityEngine.Rendering.Universal
             {
                 case RenderingMode.Forward:
                 case RenderingMode.ForwardPlus:
-                    return 1 << (int)CameraRenderType.Base | 1 << (int)CameraRenderType.Overlay;
+                    return 1 << (int)CameraRenderType.Base | 1 << (int)CameraRenderType.Overlay; // 左移0位或者1位，分别代表 1 或者 2
                 case RenderingMode.Deferred:
-                    return 1 << (int)CameraRenderType.Base;
+                    return 1 << (int)CameraRenderType.Base; // 左移 0 位，代表 1
                 default:
                     return 0;
             }
@@ -84,11 +87,20 @@ namespace UnityEngine.Rendering.Universal
 
         // Actual rendering mode, which may be different (ex: wireframe rendering, hardware not capable of deferred rendering).
         // 实际渲染模式，可能不同（例如：线框渲染，硬件无法进行延迟渲染）。
-        internal RenderingMode renderingModeActual => renderingModeRequested == RenderingMode.Deferred && 
-                                                      (GL.wireframe || 
-                                                       (DebugHandler != null && DebugHandler.IsActiveModeUnsupportedForDeferred) || 
-                                                       m_DeferredLights == null || 
-                                                       !m_DeferredLights.IsRuntimeSupportedThisFrame() || 
+        /*
+        首先，判断renderingModeRequested是否等于Deferred，如果是，说明请求的是延迟渲染模式，那么就继续判断是否满足以下条件之一：
+            1. GL.wireframe：一个布尔值，表示是否开启了线框模式，如果是，说明不能使用延迟渲染模式，因为它需要使用多个渲染目标。
+            2. DebugHandler != null && DebugHandler.IsActiveModeUnsupportedForDeferred：一个布尔值，表示是否存在一个DebugHandler对象，并且它的IsActiveModeUnsupportedForDeferred属性为真，如果是，说明当前的调试模式不支持延迟渲染模式，比如光线追踪。
+            3. m_DeferredLights == null：一个布尔值，表示是否没有一个m_DeferredLights对象，如果是，说明没有初始化延迟光照的类，不能使用延迟渲染模式。
+            4. !m_DeferredLights.IsRuntimeSupportedThisFrame()：一个布尔值，表示是否当前帧不支持运行时的延迟渲染模式，如果是，说明有一些限制条件，比如渲染目标的数量、格式、分辨率等，不能使用延迟渲染模式。
+            5. m_DeferredLights.IsOverlay：一个布尔值，表示是否当前的相机类型是覆盖类型，如果是，说明不能使用延迟渲染模式，因为它只支持基础类型的相机。
+        然后，如果满足以上任何一个条件，就返回Forward，表示实际使用的是正向渲染模式，否则返回renderingModeRequested，表示实际使用的是请求的渲染模式。
+        */
+        internal RenderingMode renderingModeActual => renderingModeRequested == RenderingMode.Deferred &&
+                                                      (GL.wireframe ||
+                                                       (DebugHandler != null && DebugHandler.IsActiveModeUnsupportedForDeferred) ||
+                                                       m_DeferredLights == null ||
+                                                       !m_DeferredLights.IsRuntimeSupportedThisFrame() ||
                                                        m_DeferredLights.IsOverlay)
         ? RenderingMode.Forward
         : this.renderingModeRequested;
@@ -184,7 +196,7 @@ namespace UnityEngine.Rendering.Universal
 #if ENABLE_VR && ENABLE_XR_MODULE
             Experimental.Rendering.XRSystem.Initialize(XRPassUniversal.Create, data.xrSystemData.shaders.xrOcclusionMeshPS, data.xrSystemData.shaders.xrMirrorViewPS);
 #endif
-            
+
             // 创建材质
             m_BlitMaterial = CoreUtils.CreateEngineMaterial(data.shaders.coreBlitPS);
             m_BlitHDRMaterial = CoreUtils.CreateEngineMaterial(data.shaders.blitHDROverlay);
@@ -204,7 +216,7 @@ namespace UnityEngine.Rendering.Universal
             m_DefaultStencilState.SetZFailOperation(stencilData.zFailOperation);
 
             // 中间纹理渲染模式
-            m_IntermediateTextureMode = data.intermediateTextureMode; 
+            m_IntermediateTextureMode = data.intermediateTextureMode;
 
             if (UniversalRenderPipeline.asset?.supportsLightCookies ?? false)
             {
@@ -453,29 +465,29 @@ namespace UnityEngine.Rendering.Universal
                     switch (fullScreenDebugMode)
                     {
                         case DebugFullScreenMode.Depth:
-                        {
-                            DebugHandler.SetDebugRenderTarget(m_DepthTexture.nameID, normalizedRect, true);
-                            break;
-                        }
+                            {
+                                DebugHandler.SetDebugRenderTarget(m_DepthTexture.nameID, normalizedRect, true);
+                                break;
+                            }
                         case DebugFullScreenMode.AdditionalLightsShadowMap:
-                        {
-                            DebugHandler.SetDebugRenderTarget(m_AdditionalLightsShadowCasterPass.m_AdditionalLightsShadowmapHandle, normalizedRect, false);
-                            break;
-                        }
+                            {
+                                DebugHandler.SetDebugRenderTarget(m_AdditionalLightsShadowCasterPass.m_AdditionalLightsShadowmapHandle, normalizedRect, false);
+                                break;
+                            }
                         case DebugFullScreenMode.MainLightShadowMap:
-                        {
-                            DebugHandler.SetDebugRenderTarget(m_MainLightShadowCasterPass.m_MainLightShadowmapTexture, normalizedRect, false);
-                            break;
-                        }
+                            {
+                                DebugHandler.SetDebugRenderTarget(m_MainLightShadowCasterPass.m_MainLightShadowmapTexture, normalizedRect, false);
+                                break;
+                            }
                         case DebugFullScreenMode.ReflectionProbeAtlas:
-                        {
-                            DebugHandler.SetDebugRenderTarget(m_ForwardLights.reflectionProbeManager.atlasRT, normalizedRect, false);
-                            break;
-                        }
+                            {
+                                DebugHandler.SetDebugRenderTarget(m_ForwardLights.reflectionProbeManager.atlasRT, normalizedRect, false);
+                                break;
+                            }
                         default:
-                        {
-                            break;
-                        }
+                            {
+                                break;
+                            }
                     }
                 }
                 else
@@ -499,7 +511,7 @@ namespace UnityEngine.Rendering.Universal
             // Enabled Depth priming when baking Reflection Probes causes artefacts (UUM-12397)
             bool isNotReflectionCamera = cameraData.cameraType != CameraType.Reflection;
 
-            return  depthPrimingRequested && isForwardRenderingMode && isFirstCameraToWriteDepth && isNotReflectionCamera;
+            return depthPrimingRequested && isForwardRenderingMode && isFirstCameraToWriteDepth && isNotReflectionCamera;
         }
 
         bool IsGLESDevice()
@@ -530,7 +542,7 @@ namespace UnityEngine.Rendering.Universal
             if (DebugHandler != null)
             {
                 DebugHandler.Setup(context, ref renderingData);
-                
+
                 if (DebugHandler.IsActiveForCamera(ref cameraData))
                 {
                     if (DebugHandler.WriteToDebugScreenTexture(ref cameraData))
@@ -642,7 +654,7 @@ namespace UnityEngine.Rendering.Universal
             bool isSceneViewOrPreviewCamera = cameraData.isSceneViewCamera || cameraData.cameraType == CameraType.Preview;
             useDepthPriming = IsDepthPrimingEnabled(ref cameraData);
             // This indicates whether the renderer will output a depth texture.
-            // 表示渲染器是否会输出深度纹理。
+            // 表示渲染器是否会输出深度纹理。下面三种情况表示需要深度纹理：1、勾选深度纹理；2、在renderPass中需要深度纹理或者需要运动向量的时候；3、选了强制DepthPriming
             bool requiresDepthTexture = cameraData.requiresDepthTexture || renderPassInputs.requiresDepthTexture || m_DepthPrimingMode == DepthPrimingMode.Forced;
 
 #if UNITY_EDITOR
@@ -659,10 +671,11 @@ namespace UnityEngine.Rendering.Universal
 
             // Depth prepass is generated in the following cases:
             // - If game or offscreen camera requires it we check if we can copy the depth from the rendering opaques pass and use that instead.
-            // - 如果游戏或离屏的摄像机需要，我们会检查是否可以从渲染不透明pass中复制深度，然后使用它来代替。
+            // - 如果游戏或离屏的摄像机需要，我们会检查是否可以"从渲染不透明pass中Copy Depth"，然后使用它来代替。
             // - Scene or preview cameras always require a depth texture. We do a depth pre-pass to simplify it and it shouldn't matter much for editor.
             // - 场景或预览摄像机总是需要深度纹理。我们会进行深度预处理来简化它，这对编辑器来说应该没什么影响。
             // - Render passes require it
+            // 下面几种情况需要pre-z：1、需要深度纹理或者相机后处理需要深度；2、并且不可以拷贝深度
             bool requiresDepthPrepass = (requiresDepthTexture || cameraHasPostProcessingWithDepth) && (!CanCopyDepth(ref renderingData.cameraData) || forcePrepass);
             requiresDepthPrepass |= isSceneViewOrPreviewCamera;
             requiresDepthPrepass |= isGizmosEnabled;
@@ -1103,7 +1116,7 @@ namespace UnityEngine.Rendering.Universal
                 // XRTODO: investigate DX XR clear issues.
                 if (SystemInfo.usesLoadStoreActions)
 #endif
-                renderOpaqueForwardPass.ConfigureClear(opaqueForwardPassClearFlag, Color.black);
+                    renderOpaqueForwardPass.ConfigureClear(opaqueForwardPassClearFlag, Color.black);
 
                 EnqueuePass(renderOpaqueForwardPass);
             }
