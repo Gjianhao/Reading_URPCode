@@ -218,6 +218,7 @@ namespace UnityEngine.Rendering.Universal
             // 中间纹理渲染模式
             m_IntermediateTextureMode = data.intermediateTextureMode;
 
+            // 如果支持光照 Cookie，创建光照 Cookie 管理器
             if (UniversalRenderPipeline.asset?.supportsLightCookies ?? false)
             {
                 var settings = LightCookieManager.Settings.Create();
@@ -315,13 +316,13 @@ namespace UnityEngine.Rendering.Universal
             m_RenderOpaqueForwardPass = new DrawObjectsPass(URPProfileId.DrawOpaqueObjects, true, RenderPassEvent.BeforeRenderingOpaques, RenderQueueRange.opaque, data.opaqueLayerMask, m_DefaultStencilState, stencilData.stencilReference);
             m_RenderOpaqueForwardWithRenderingLayersPass = new DrawObjectsWithRenderingLayersPass(URPProfileId.DrawOpaqueObjects, true, RenderPassEvent.BeforeRenderingOpaques, RenderQueueRange.opaque, data.opaqueLayerMask, m_DefaultStencilState, stencilData.stencilReference);
 
-            bool copyDepthAfterTransparents = m_CopyDepthMode == CopyDepthMode.AfterTransparents;
+            bool copyDepthAfterTransparents = m_CopyDepthMode == CopyDepthMode.AfterTransparents; // 在透明物体之后拷贝深度
 
             m_CopyDepthPass = new CopyDepthPass(
                 copyDepthAfterTransparents ? RenderPassEvent.AfterRenderingTransparents : RenderPassEvent.AfterRenderingSkybox,
                 m_CopyDepthMaterial,
-                shouldClear: true,
-                copyResolvedDepth: RenderingUtils.MultisampleDepthResolveSupported() && copyDepthAfterTransparents);
+                shouldClear: true,  // 表示清除目标深度缓冲。
+                copyResolvedDepth: RenderingUtils.MultisampleDepthResolveSupported() && copyDepthAfterTransparents); // 复制已经解析的深度缓冲。
 
             m_DrawSkyboxPass = new DrawSkyboxPass(RenderPassEvent.BeforeRenderingSkybox);
             m_CopyColorPass = new CopyColorPass(RenderPassEvent.AfterRenderingSkybox, m_SamplingMaterial, m_BlitMaterial);
@@ -586,9 +587,9 @@ namespace UnityEngine.Rendering.Universal
             }
 
             // Assign the camera color target early in case it is needed during AddRenderPasses.
+            // 尽早指定相机的颜色目标，以防在AddRenderPasses过程中需要它。
             bool isPreviewCamera = cameraData.isPreviewCamera;
-            var createColorTexture = ((rendererFeatures.Count != 0 && m_IntermediateTextureMode == IntermediateTextureMode.Always) && !isPreviewCamera) ||
-                (Application.isEditor && m_Clustering);
+            var createColorTexture = ((rendererFeatures.Count != 0 && m_IntermediateTextureMode == IntermediateTextureMode.Always) && !isPreviewCamera) || (Application.isEditor && m_Clustering);
 
             // Gather render passe input requirements 收集渲染输入要求
             RenderPassInputSummary renderPassInputs = GetRenderPassInputs(ref renderingData);
@@ -667,7 +668,7 @@ namespace UnityEngine.Rendering.Universal
             bool additionalLightShadows = m_AdditionalLightsShadowCasterPass.Setup(ref renderingData);
             bool transparentsNeedSettingsPass = m_TransparentSettingsPass.Setup(ref renderingData);
 
-            bool forcePrepass = (m_CopyDepthMode == CopyDepthMode.ForcePrepass);
+            bool forcePrepass = (m_CopyDepthMode == CopyDepthMode.ForcePrepass); // 强制预处理
 
             // Depth prepass is generated in the following cases:
             // - If game or offscreen camera requires it we check if we can copy the depth from the rendering opaques pass and use that instead.
@@ -675,13 +676,13 @@ namespace UnityEngine.Rendering.Universal
             // - Scene or preview cameras always require a depth texture. We do a depth pre-pass to simplify it and it shouldn't matter much for editor.
             // - 场景或预览摄像机总是需要深度纹理。我们会进行深度预处理来简化它，这对编辑器来说应该没什么影响。
             // - Render passes require it
-            // 下面几种情况需要pre-z：1、需要深度纹理或者相机后处理需要深度；2、并且不可以拷贝深度
+            // 下面几种情况需要深度预处理pre-z：1、需要深度纹理或者相机后处理需要深度；2、并且不能拷贝深度缓冲或者强制进行深度预处理
             bool requiresDepthPrepass = (requiresDepthTexture || cameraHasPostProcessingWithDepth) && (!CanCopyDepth(ref renderingData.cameraData) || forcePrepass);
-            requiresDepthPrepass |= isSceneViewOrPreviewCamera;
-            requiresDepthPrepass |= isGizmosEnabled;
-            requiresDepthPrepass |= isPreviewCamera;
-            requiresDepthPrepass |= renderPassInputs.requiresDepthPrepass;
-            requiresDepthPrepass |= renderPassInputs.requiresNormalsTexture;
+            requiresDepthPrepass |= isSceneViewOrPreviewCamera;  // 如果是场景视图或者预览相机，那么需要深度预处理。
+            requiresDepthPrepass |= isGizmosEnabled; // 如果启用了Gizmos，那么需要深度预处理。
+            requiresDepthPrepass |= isPreviewCamera; // 如果是预览相机，那么需要深度预处理。
+            requiresDepthPrepass |= renderPassInputs.requiresDepthPrepass; // 如果渲染流程的输入要求深度预处理，那么需要深度预处理。
+            requiresDepthPrepass |= renderPassInputs.requiresNormalsTexture; // 如果渲染流程的输入要求法线纹理，那么需要深度预处理。
 
             // Current aim of depth prepass is to generate a copy of depth buffer, it is NOT to prime depth buffer and reduce overdraw on non-mobile platforms.
             // When deferred renderer is enabled, depth buffer is already accessible so depth prepass is not needed.
@@ -690,31 +691,36 @@ namespace UnityEngine.Rendering.Universal
             // - forward-only geometry when deferred renderer is enabled
             // - all geometry when forward renderer is enabled
             if (requiresDepthPrepass && this.renderingModeActual == RenderingMode.Deferred && !renderPassInputs.requiresNormalsTexture)
-                requiresDepthPrepass = false;
+                requiresDepthPrepass = false; // 如果需要深度预处理，且当前的渲染模式是延迟渲染，且不需要法线纹理，那么不需要深度预处理。
 
-            requiresDepthPrepass |= useDepthPriming;
+            requiresDepthPrepass |= useDepthPriming; // 如果使用深度优化，那么需要深度预处理。
 
-            // If possible try to merge the opaque and skybox passes instead of splitting them when "Depth Texture" is required. 如果可能，在需要使用 "深度纹理 "时，请尝试合并不透明和天空盒通道，而不是将它们分开。
-            // The copying of depth should normally happen after rendering opaques. 复制深度通常应在渲染不透明后进行。
-            // But if we only require it for post processing or the scene camera then we do it after rendering transparent objects 但是，如果我们只需要在后期处理或场景摄像机中使用，那么我们就可以在渲染透明对象后使用它
-            // Aim to have the most optimized render pass event for Depth Copy (The aim is to minimize the number of render passes) 目标是为深度复制提供最优化的渲染传递事件（目的是尽量减少渲染传递的次数）
+            // If possible try to merge the opaque and skybox passes instead of splitting them when "Depth Texture" is required.
+            // The copying of depth should normally happen after rendering opaques.
+            // But if we only require it for post processing or the scene camera then we do it after rendering transparent objects 
+            // Aim to have the most optimized render pass event for Depth Copy (The aim is to minimize the number of render passes) 
+            // 如果可能，在需要使用 "深度纹理 "时，请尝试合并不透明和天空盒通道，而不是将它们分开。
+            // 复制深度通常应在渲染不透明后进行。
+            // 但是，如果我们只需要在后期处理或场景摄像机中使用，那么我们就可以在渲染透明对象后使用它
+            // 目标是为深度复制提供最优化的渲染传递事件（目的是尽量减少渲染传递的次数）
             if (requiresDepthTexture)
             {
-                bool copyDepthAfterTransparents = m_CopyDepthMode == CopyDepthMode.AfterTransparents;
+                bool copyDepthAfterTransparents = m_CopyDepthMode == CopyDepthMode.AfterTransparents; // 是否在渲染透明物体之后复制深度缓冲的结果。
 
-                RenderPassEvent copyDepthPassEvent = copyDepthAfterTransparents ? RenderPassEvent.AfterRenderingTransparents : RenderPassEvent.AfterRenderingOpaques;
+                RenderPassEvent copyDepthPassEvent = copyDepthAfterTransparents ? RenderPassEvent.AfterRenderingTransparents : RenderPassEvent.AfterRenderingOpaques; // 拷贝深度缓冲的时机：透明物体之后还是不透明物体之后
                 // RenderPassInputs's requiresDepthTexture is configured through ScriptableRenderPass's ConfigureInput function
+                // 判断是否渲染流程的输入要求深度纹理
                 if (renderPassInputs.requiresDepthTexture)
                 {
                     // Do depth copy before the render pass that requires depth texture as shader read resource
-                    copyDepthPassEvent = (RenderPassEvent)Mathf.Min((int)RenderPassEvent.AfterRenderingTransparents, ((int)renderPassInputs.requiresDepthTextureEarliestEvent) - 1);
+                    copyDepthPassEvent = (RenderPassEvent)Mathf.Min((int)RenderPassEvent.AfterRenderingTransparents, ((int)renderPassInputs.requiresDepthTextureEarliestEvent) - 1); // 这样做的目的是为了尽可能早地复制深度缓冲，以满足渲染流程的输入要求。
                 }
                 m_CopyDepthPass.renderPassEvent = copyDepthPassEvent;
             }
-            else if (cameraHasPostProcessingWithDepth || isSceneViewOrPreviewCamera || isGizmosEnabled)
+            else if (cameraHasPostProcessingWithDepth || isSceneViewOrPreviewCamera || isGizmosEnabled) // 如果不需要深度纹理，但是相机有使用深度的后处理效果，或者是场景视图或者预览相机，或者启用了Gizmos
             {
                 // If only post process requires depth texture, we can re-use depth buffer from main geometry pass instead of enqueuing a depth copy pass, but no proper API to do that for now, so resort to depth copy pass for now
-                m_CopyDepthPass.renderPassEvent = RenderPassEvent.AfterRenderingTransparents;
+                m_CopyDepthPass.renderPassEvent = RenderPassEvent.AfterRenderingTransparents; // 在渲染透明物体之后复制深度缓冲
             }
 
 
@@ -1550,7 +1556,7 @@ namespace UnityEngine.Rendering.Universal
             // When rendering a camera stack we always create an intermediate render texture to composite camera results.
             // We create it upon rendering the Base camera.
             if (cameraData.renderType == CameraRenderType.Base && !cameraData.resolveFinalTarget)
-                return true;
+                return true; // 当渲染一个相机堆栈时，我们总是需要创建一个中间渲染纹理来合成相机的结果。我们在渲染基础相机时创建它。
 
             // Always force rendering into intermediate color texture if deferred rendering mode is selected.
             // Reason: without intermediate color texture, the target camera texture is y-flipped.
@@ -1558,16 +1564,32 @@ namespace UnityEngine.Rendering.Universal
             // Gbuffer pass will not be y-flipped because it is MRT (see ScriptableRenderContext implementation),
             // while deferred pass will be y-flipped, which breaks rendering.
             // This incurs an extra blit into at the end of rendering.
+            // 如果当前的渲染模式是延迟渲染，那么需要创建中间颜色纹理。
+            // 这是因为如果没有中间颜色纹理，目标相机纹理会被沿y轴翻转。
+            // 然而，目标相机纹理会在gbuffer pass和deferred pass中被绑定。
+            // gbuffer pass不会被翻转，因为它是多渲染目标（参见ScriptableRenderContext的实现），
+            // 而deferred pass会被翻转，这会破坏渲染。这会导致在渲染结束时多一个blit操作。
             if (this.renderingModeActual == RenderingMode.Deferred)
                 return true;
 
-            bool isSceneViewCamera = cameraData.isSceneViewCamera;
-            var cameraTargetDescriptor = cameraData.cameraTargetDescriptor;
-            int msaaSamples = cameraTargetDescriptor.msaaSamples;
-            bool isScaledRender = cameraData.imageScalingMode != ImageScalingMode.None;
+            bool isSceneViewCamera = cameraData.isSceneViewCamera; // 如果当前的相机是场景视图相机，那么需要创建中间颜色纹理。
+            var cameraTargetDescriptor = cameraData.cameraTargetDescriptor; // 这是一个RenderTextureDescriptor类型的变量，用于描述相机的目标纹理的属性，如宽度，高度，格式，维度，多重采样等。
+            int msaaSamples = cameraTargetDescriptor.msaaSamples; // 用于存储目标纹理的多重采样数量。多重采样是一种抗锯齿技术，用于提高渲染的质量。
+            // 用于存储是否需要对渲染结果进行缩放的结果。这个结果是根据cameraData的imageScalingMode属性来确定的，如果cameraData的imageScalingMode属性不等于ImageScalingMode.None，那么isScaledRender为true，否则为false。
+            // 缩放渲染是一种渲染技术，用于将渲染结果的分辨率调整为目标纹理的分辨率，以便后续的渲染过程可以使用它。
+            bool isScaledRender = cameraData.imageScalingMode != ImageScalingMode.None; 
+            // 用于存储目标纹理的维度是否与后备缓冲的维度兼容的结果。这个结果是根据cameraTargetDescriptor的dimension属性来确定的，如果cameraTargetDescriptor的dimension属性等于TextureDimension.Tex2D，
+            // 那么isCompatibleBackbufferTextureDimension为true，否则为false。后备缓冲是一种渲染目标，用于存储最终的渲染结果，以便显示到屏幕上。
             bool isCompatibleBackbufferTextureDimension = cameraTargetDescriptor.dimension == TextureDimension.Tex2D;
+            // 用于存储是否需要显式地解析多重采样的结果。这个结果是根据msaaSamples的值和PlatformRequiresExplicitMsaaResolve()方法的返回值来确定的，
+            // 如果msaaSamples大于1，且PlatformRequiresExplicitMsaaResolve()方法返回true，那么requiresExplicitMsaaResolve为true，否则为false。
+            // 解析多重采样是一种渲染技术，用于将每个像素的多个颜色值合并为一个颜色值的过程。这样做的目的是为了将多重采样的纹理从一个渲染目标复制到另一个渲染目标，以便后续的渲染过程可以使用它。一些平台需要显式地进行这个过程，而一些平台可以隐式地进行这个过程。
             bool requiresExplicitMsaaResolve = msaaSamples > 1 && PlatformRequiresExplicitMsaaResolve();
+            // 用于存储是否是离屏渲染的结果。这个结果是根据cameraData的targetTexture属性和isSceneViewCamera变量来确定的，如果cameraData的targetTexture属性不为null，且isSceneViewCamera为false，那么isOffscreenRender为true，否则为false。
+            // 离屏渲染是一种渲染技术，用于将渲染结果输出到一个非屏幕的渲染目标，以便后续的渲染过程可以使用它。
             bool isOffscreenRender = cameraData.targetTexture != null && !isSceneViewCamera;
+            // 用于存储是否正在捕获渲染结果的结果。这个结果是根据cameraData的captureActions属性来确定的，如果cameraData的captureActions属性不为null，那么isCapturing为true，否则为false。
+            // 捕获渲染结果是一种渲染技术，用于将渲染结果保存到一个指定的位置，以便后续的使用或者分享。
             bool isCapturing = cameraData.captureActions != null;
 
 #if ENABLE_VR && ENABLE_XR_MODULE
@@ -1577,19 +1599,28 @@ namespace UnityEngine.Rendering.Universal
                 isCompatibleBackbufferTextureDimension = cameraData.xr.renderTargetDesc.dimension == cameraTargetDescriptor.dimension;
             }
 #endif
+            // 用于存储是否启用了后处理的结果。这个结果是根据cameraData的postProcessEnabled属性和m_PostProcessPasses的isCreated属性来确定的，
+            // 如果cameraData的postProcessEnabled属性为true，且m_PostProcessPasses的isCreated属性为true，那么postProcessEnabled为true，否则为false。
+            // 后处理是一种渲染技术，用于对渲染结果进行一系列的图像处理效果，如色彩校正，模糊，泛光，抗锯齿等，以提高渲染的质量和美感。
             bool postProcessEnabled = cameraData.postProcessEnabled && m_PostProcessPasses.isCreated;
+            // 用于存储是否需要对离屏相机进行blit操作的结果。这个结果是根据postProcessEnabled变量，cameraData的requiresOpaqueTexture属性，requiresExplicitMsaaResolve变量，和cameraData的isDefaultViewport属性来确定的，
+            // blit操作是一种渲染技术，用于将一个渲染目标的内容复制到另一个渲染目标中，可以选择使用一个材质来进行一些图像处理效果。
             bool requiresBlitForOffscreenCamera = postProcessEnabled || cameraData.requiresOpaqueTexture || requiresExplicitMsaaResolve || !cameraData.isDefaultViewport;
             if (isOffscreenRender)
                 return requiresBlitForOffscreenCamera;
 
             return requiresBlitForOffscreenCamera || isSceneViewCamera || isScaledRender || cameraData.isHdrEnabled ||
-                !isCompatibleBackbufferTextureDimension || isCapturing || cameraData.requireSrgbConversion;
+                !isCompatibleBackbufferTextureDimension || isCapturing || cameraData.requireSrgbConversion;  // 不是离屏渲染，就是这几种情况需要生成中间纹理
         }
 
         /// <summary>
         /// 是否能拷贝深度：
         /// 1.如果没有开启MSAA，并且支持纹理的拷贝，就支持深度的拷贝
         /// 2.或者如果开启了msaa，并且支持多重采样纹理，但是不能在GLES移动设备上
+        /// 首先，定义了几个布尔变量，分别表示相机是否开启了MSAA，系统是否支持复制纹理，系统是否支持深度渲染目标，以及系统是否支持复制深度缓冲区（需要同时满足不开启MSAA和支持深度渲染目标或复制纹理）。
+        /// 然后，定义了一个布尔变量，表示是否可以通过解析多重采样纹理来获取深度缓冲区（需要同时满足开启MSAA和支持多重采样纹理）。
+        /// 接着，判断是否是GLES设备，如果是的话，且可以通过解析多重采样纹理来获取深度缓冲区，那么返回false，因为GLES设备不支持高精度的多重采样纹理，会导致深度精度的损失。
+        /// 最后，返回是否支持复制深度缓冲区或者解析多重采样纹理的结果，这就是相机是否能够复制深度缓冲区的判断条件。
         /// </summary>
         /// <param name="cameraData"></param>
         /// <returns></returns>

@@ -12,6 +12,15 @@ namespace UnityEngine.Rendering.Universal.Internal
     /// enabled, the pass uses a custom MSAA resolve. If the source texture
     /// does not have MSAA enabled, the pass uses a Blit or a Copy Texture
     /// operation, depending on what the current platform supports.
+    /// 
+    /// 将给定的深度缓冲区复制到给定的目标深度缓冲区。
+    /// 
+    /// 您可以使用此 pass 将深度缓冲区复制到目的地，以便稍后在渲染中使用它。
+    /// 如果源纹理启用了MSAA，则pass使用自定义的MSAA解析。
+    /// 如果源纹理没有启用MSAA，则pass将使用块或复制纹理操作，具体取决于当前平台支持的内容。
+    /// 
+    /// 已经解析的深度缓冲是指对于启用了多重采样 (MSAA) 的深度缓冲，使用一个自定义的算法将每个像素的多个深度值合并为一个深度值的过程。
+    /// 这样做的目的是为了将深度缓冲从一个渲染目标复制到另一个渲染目标，以便后续的渲染过程可以使用它。如果源纹理没有启用MSAA，那么不需要进行深度解析，直接使用一个Blit或者一个Copy Texture操作即可。
     /// </summary>
     public class CopyDepthPass : ScriptableRenderPass
     {
@@ -75,7 +84,7 @@ namespace UnityEngine.Rendering.Universal.Internal
                 ConfigureTarget(destination, destination);
             else
 #endif
-            ConfigureTarget(destination);
+                ConfigureTarget(destination);
             if (m_ShouldClear)
                 ConfigureClear(ClearFlag.All, Color.black);
         }
