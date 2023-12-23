@@ -345,6 +345,8 @@ half3 SampleNormal(float2 uv, float linearDepth, float2 pixelDensity) {
 half4 SSAO(Varyings input) : SV_Target {
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
     float2 uv = input.texcoord;
+
+    ////////////////////// 1、首先，从纹理中采样当前像素的深度值，并将其转换为线性空间的深度值。如果深度值小于天空的深度值，或者大于设定的衰减距离，那么直接返回零的遮挡值和法线值。 
     // Early Out for Sky...
     float rawDepth_o = SampleDepth(uv); // 采样深度值
     if (rawDepth_o < SKY_DEPTH_VALUE)
@@ -362,16 +364,19 @@ half4 SSAO(Varyings input) : SV_Target {
         float2 pixelDensity = float2(1.0f, 1.0f);  // 得到像素密度
     #endif
 
+    ////////////////////// 2、然后，从另一个纹理中采样当前像素的法线值，并根据深度值和纹理坐标重建当前像素的视空间位置。
     // Normal for this fragment 采样法线
     half3 normal_o = SampleNormal(uv, linearDepth_o, pixelDensity);
 
     // View position for this fragment  重建观察坐标
     float3 vpos_o = ReconstructViewPos(uv, linearDepth_o);
 
+    ////////////////////// 3、接着，根据摄像机的视图投影矩阵，计算出两个用于将视空间位置转换为屏幕空间位置的向量。
     // Parameters used in coordinate conversion 坐标转换时用到的参数
     half3 camTransform000102 = half3(_CameraViewProjections[unity_eyeIndex]._m00, _CameraViewProjections[unity_eyeIndex]._m01, _CameraViewProjections[unity_eyeIndex]._m02);
     half3 camTransform101112 = half3(_CameraViewProjections[unity_eyeIndex]._m10, _CameraViewProjections[unity_eyeIndex]._m11, _CameraViewProjections[unity_eyeIndex]._m12);
 
+    ////////////////////// 4、然后，循环采样周围的像素点，根据当前像素的法线值和像素密度，选择一个合适的采样点的偏移量，并将其加到当前像素的视空间位置上，得到采样点的视空间位置。
     const half rcpSampleCount = half(rcp(SAMPLE_COUNT)); // 采样次数的倒数
     half ao = HALF_ZERO; // 初始为0
     half sHalf = HALF_MINUS_ONE; // 初始为-1
@@ -387,6 +392,7 @@ half4 SSAO(Varyings input) : SV_Target {
             camTransform101112.x * vpos_s1.x + camTransform101112.y * vpos_s1.y + camTransform101112.z * vpos_s1.z
         );
 
+        ///////////////////// 5、接着，将采样点的视空间位置转换为屏幕空间位置，并根据屏幕空间位置的坐标，从深度纹理中采样采样点的深度值，并将其转换为线性空间的深度值。
         // 计算采样点的uv
         half zDist = HALF_ZERO;
         #if defined(_ORTHOGRAPHIC)
@@ -406,6 +412,7 @@ half4 SSAO(Varyings input) : SV_Target {
         float rawDepth_s = SampleDepth(uv_s1_01);
         float linearDepth_s = GetLinearEyeDepth(rawDepth_s);
 
+        /////////////////// 6、然后，判断采样点是否在当前像素的遮挡半径内，以及是否不是天空的深度值。如果是，那么计算采样点和当前像素的视空间距离，以及采样点的视空间方向和当前像素的法线值的点积。根据这两个值，计算出采样点对当前像素的遮挡贡献，并累加到总的遮挡值上。
         // We need to make sure we not use the AO value if the sample point it's outside the radius or if it's the sky...
         // 如果采样点在半径之外，或者是天空，我们需要确保不要使用AO值。
         half halfLinearDepth_s = half(linearDepth_s);
@@ -424,6 +431,7 @@ half4 SSAO(Varyings input) : SV_Target {
         ao += a1 * rcp(a2) * isInsideRadius;
     }
 
+    //////////////////// 7、最后，根据遮挡半径，衰减距离，强度，对比度等参数，对总的遮挡值进行缩放和饱和处理，并将其和法线值一起打包返回。
     // Intensity normalization
     ao *= RADIUS;
 
